@@ -2,21 +2,38 @@
 from data_structures import initialize_processor
 from instruction import decode_instruction
 
+import json
+
 class Simulator:
     def __init__(self):
-        self.processor_state = initialize_processor()
+        self.instructions = []
+        self.processor_state = {
+            "PC": 0,
+            "PhysicalRegisterFile": [0] * 64,
+            "DecodedInstructions": [],
+            "ExceptionFlag": False,
+            "ExceptionPC": 0,
+            "RegisterMapTable": list(range(32)),
+            "FreeList": list(range(32, 64)),
+            "BusyBitTable": [False] * 64,
+            "ActiveList": [],
+            "IntegerQueue": [],
+            "halt": False  # 控制模拟器是否停止
+        }
 
-    def load_instructions(self, input_file):
+    def load_instructions(self, input_file_path):
         # 读取指令集文件并存储
-        pass
+        # load instructions from json file
+        self.instructions = json.load(open(input_file_path))
+
 
     def run(self):
-        # 主循环，按周期更新处理器状态
-        while not self.processor_state["halt"]:
-            # 例如，获取、解码、执行指令等
-            decode_instruction(self.processor_state)
-            # 更新状态等
-            self.processor_state["PC"] += 1  # 示例
+        # Only for test
+        for ins in self.instructions:
+            opcode, operands = decode_instruction(ins)
+            print(opcode, operands)
+            self.processor_state["DecodedInstructions"].append((opcode, operands))
+        print("[INFO] Instructions loaded")
 
     def print_state(self):
         # 输出处理器的当前状态
