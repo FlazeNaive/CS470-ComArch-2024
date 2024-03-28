@@ -1,5 +1,5 @@
 # simulator.py
-from data_structures import ActiveListEntry, IntegerQueueEntry, compare_json
+from data_structures import ActiveListEntry, IntegerQueueEntry, ALUEntry, compare_json
 from instruction import decode_instruction
 
 import json
@@ -11,6 +11,9 @@ class Simulator:
         self.logs = []
         self.actlist = []
         self.intqueue = []
+        self.ALU0 = []
+        self.ALU1 = []
+        self.ALU2 = []
         self.processor_state = {
             "PC": 0,
             "PhysicalRegisterFile": [0] * 64,
@@ -48,8 +51,54 @@ class Simulator:
         count_cycle = 1
         while self.processor_state['PC'] < len(self.instructions):
             flag_backpressure = False
+            flag_exception = False
 
+            # ==================== stage 3 ====================
+            # issue, execution, forwarding pipeline
+
+            # find 4 oldest ready ins in integerqueue
+            ready_int = []
+            for intentry in self.intqueue:
+                if intentry.OpAIsReady and intentry.OpBIsReady:
+                    ready_int.append(intentry)
+                
+            ready_int = sorted(ready_int, key = lambda x: x.PC)
             
+            if len(ready_int) > 4:
+                ready_int = ready_int[:4]
+
+            # calculate the result
+            self.ALU2 = self.ALU1
+            self.ALU1 = self.ALU0
+            self.ALU0 = []
+            for intentry in ready_int:
+                result = 0
+                match intentry.opCode:
+                    case 'add': 
+                        result = intentry.OpAValue + intentry.OpBValue
+                    case 'sub':
+                        result = intentry.OpAValue - intentry.OpBValue
+                    case 'mulu':
+                        result = intentry.OpAValue * intentry.OpBValue
+                    case 'divu':
+                        if intentry.OpBValue == 0:
+                            flag_exception = True
+                        else:
+                            result = intentry.OpAValue // intentry.OpBValue
+                    case 'remu':
+                        if intentry.OpBValue == 0:
+                            flag_exception = True
+                        else:
+                            result = intentry.OpAValue % intentry.OpBValue
+                
+                if not flag_exception:
+                    self.ALU0.append(ALUEntry(intentry.DestinationRegister, result))
+                else:
+                    # TODO: exception
+                    pass
+            
+            # update IntegerQueue
+                        
 
             # ==================== stage 2 ====================
             # rename and dispatch
@@ -89,9 +138,9 @@ class Simulator:
                             OldDestination=old_physical_dest, 
                             PC=ins)
                     self.actlist.append(cur_actlist)
-                    self.processor_state['ActiveList'].append(
-                        json.loads(
-                            json.dumps(cur_actlist.__dict__)))
+                    # self.processor_state['ActiveList'].append(
+                    #     json.loads(
+                    #         json.dumps(cur_actlist.__dict__)))
 
                     # update IntegerQueue
                     OpAIsReady = False
@@ -132,12 +181,26 @@ class Simulator:
                                           OpCode=opr,
                                           PC=ins)
                     self.intqueue.append(cur_intque)
-                    self.processor_state['IntegerQueue'].append(
-                        json.loads(
-                            json.dumps(cur_intque.__dict__)))
+                    # self.processor_state['IntegerQueue'].append(
+                    #     json.loads(
+                    #         json.dumps(cur_intque.__dict__)))
+
                     # update BusybitTable
                     self.processor_state['BusyBitTable'][new_physical_dest] = True
+
                 self.processor_state['DecodedPCs'] = []
+                self.processor_state['IntegerQueue'] = []
+                for intque in self.intqueue:
+                    self.processor_state['IntegerQueue'].append(
+                        json.loads(
+                            json.dumps(intque.__dict__)))
+                self.processor_state['ActiveList'] = []
+
+                for actentry in self.actlist:
+                    self.processor_state['ActiveList'].append(
+                            json.loads(
+                                json.dumps(actentry.__dict__)))
+                    
 
             else: 
                 self.handle_backpressure()
