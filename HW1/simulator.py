@@ -8,6 +8,7 @@ class Simulator:
     def __init__(self):
         self.instructions = []
         self.parsedInstructions = []
+        self.logs = []
         self.processor_state = {
             "PC": 0,
             "PhysicalRegisterFile": [0] * 64,
@@ -33,20 +34,29 @@ class Simulator:
         # Only for test
         print("[INFO] Instructions loaded")
 
+    def append_logs(self):
+        self.logs.append(json.loads(json.dumps(self.processor_state)))
 
     def run(self):
-        pass
+        self.append_logs()
+        while self.processor_state['PC'] < len(self.instructions):
+            # 逐条处理指令，每个cycle fetch 4 instructions
+            to_fetch = min(4, len(self.instructions) - self.processor_state['PC'] - 1)
+            for i in range(to_fetch):
+                # Only for test
+                print("[INFO] fetching: ", self.processor_state['PC'])
+                self.processor_state['DecodedPCs'].append(self.processor_state['PC'])
+                self.processor_state['PC'] += 1
+            
+            for 
+                        
+            self.append_logs()
+            # import ipdb; ipdb.set_trace()
+            # cycle 0, 1是对的
+            
 
 
     def print_state(self):
-        # 输出处理器的当前状态
-        # print state as json
-        # to print: ActiveList, BusybitTable, DecodedPCs, 
-        #           Exception, ExceptionPC, 
-        #           FreeList, 
-        #           IntegerQueue, PC,
-        #           PhysicalRegisterFile
-        #           RegisterMapTable
         print(json.dumps(self.processor_state, indent=4))
     
     def debug_check_same(self, std_state):

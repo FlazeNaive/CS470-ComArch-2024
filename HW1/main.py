@@ -12,5 +12,7 @@ if __name__ == "__main__":
     simulator.print_state()
 
     std_out_json = json.loads(open(std_out).read())
+
+    # INFO: only for debug
     # print(std_out_json[0])
-    simulator.debug_check_same(std_out_json[0])
+    # simulator.debug_check_same(std_out_json[0])
