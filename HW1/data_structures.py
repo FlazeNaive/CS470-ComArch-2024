@@ -1,9 +1,9 @@
 class ActiveListEntry:
-    def __init__(self, LogDes=0, OldDes=0, PC=0):
+    def __init__(self, LogicalDestination=0, OldDestination=0, PC=0):
         self.Done = False
         self.Exception = False
-        self.LogDes = LogDes
-        self.OldDes = OldDes
+        self.LogicalDestination = LogicalDestination
+        self.OldDestination = OldDestination
         self.PC = PC
     def __repr__(self):
         return ("ActiveListEntry(Done=" + str(self.Done) + ", " 
@@ -15,11 +15,11 @@ class ActiveListEntry:
 class IntegerQueueEntry:
     def __init__(self, DestRegister=0, 
                         OpAIsReady=False, 
-                        OpARegTag=-1, 
-                        OpAValue=0.0, 
+                        OpARegTag=0, 
+                        OpAValue=0, 
                         OpBIsReady=False, 
-                        OpBRegTag=-1, 
-                        OpBValue=0.0, 
+                        OpBRegTag=0, 
+                        OpBValue=0, 
                         OpCode="NOP", 
                         PC=0):
         self.DestRegister = DestRegister
@@ -56,20 +56,20 @@ def compare_json(obj1, obj2, path=""):
     if isinstance(obj1, dict) and isinstance(obj2, dict):
         for key in obj1:
             if key not in obj2:
-                print(f"{path}.{key} 在第二个JSON中不存在")
+                print(f"{path}.{key} 在std的JSON中不存在")
             else:
                 compare_json(obj1[key], obj2[key], f"{path}.{key}")
         for key in obj2:
             if key not in obj1:
-                print(f"{path}.{key} 在第一个JSON中不存在")
+                print(f"{path}.{key} 在我的JSON中不存在")
     elif isinstance(obj1, list) and isinstance(obj2, list):
         for i, item in enumerate(obj1):
             if i >= len(obj2):
-                print(f"{path}[{i}] 在第二个JSON中不存在")
+                print(f"{path}[{i}] 在std的JSON中不存在")
             else:
                 compare_json(item, obj2[i], f"{path}[{i}]")
         for i in range(len(obj1), len(obj2)):
-            print(f"{path}[{i}] 在第一个JSON中不存在")
+            print(f"{path}[{i}] 在我的JSON中不存在")
     else:
         if obj1 != obj2:
             print(f"{path} 不同: {obj1} != {obj2}")

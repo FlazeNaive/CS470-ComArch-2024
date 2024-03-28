@@ -9,17 +9,19 @@ class Simulator:
         self.instructions = []
         self.parsedInstructions = []
         self.logs = []
+        self.actlist = []
+        self.intqueue = []
         self.processor_state = {
             "PC": 0,
             "PhysicalRegisterFile": [0] * 64,
-            "DecodedPCs": [],
+            "DecodedPCs": [],           
             "ExceptionPC": 0,
             "Exception": False,
             "RegisterMapTable": list(range(32)),
             "FreeList": list(range(32, 64)),
             "BusyBitTable": [False] * 64,
-            "ActiveList": [],
-            "IntegerQueue": []
+            "ActiveList": [],           # max 32 entries
+            "IntegerQueue": []          # max 32 entries
             #, "halt": False  # 控制模拟器是否停止
         }
 
@@ -35,23 +37,135 @@ class Simulator:
         print("[INFO] Instructions loaded")
 
     def append_logs(self):
+        # import ipdb; ipdb.set_trace()
         self.logs.append(json.loads(json.dumps(self.processor_state)))
+    
+    def handle_backpressure(self):
+        pass
 
     def run(self):
         self.append_logs()
+        count_cycle = 1
         while self.processor_state['PC'] < len(self.instructions):
-            # 逐条处理指令，每个cycle fetch 4 instructions
+            flag_backpressure = False
+
+            
+
+            # ==================== stage 2 ====================
+            # rename and dispatch
+
+            # check if enough entries in 
+            ## "Active List", 
+            need_to_dispatch = min(4, len(self.processor_state['DecodedPCs']))
+            remain_active_list = 32 - len(self.processor_state['ActiveList'])
+            if remain_active_list < need_to_dispatch:
+                flag_backpressure = True
+            ## "Physical Registers", 姑且假设是busytable里的False数量
+
+            remain_physical_register = self.processor_state['BusyBitTable'].count(False)
+            if remain_physical_register < need_to_dispatch:
+                flag_backpressure = True
+
+            ## and "Integer Queue"
+            remain_integer_queue = 32 - len(self.processor_state['IntegerQueue'])
+            if remain_integer_queue < need_to_dispatch:
+                flag_backpressure = True
+
+            if not flag_backpressure:
+                for ins in self.processor_state['DecodedPCs']:
+                    # rename the instruction
+                    (opr, operands) = self.parsedInstructions[ins]
+                    logical_dest = int(operands[0][1:])
+
+                    # update RegMapTable, and Free List
+                    old_physical_dest = self.processor_state['RegisterMapTable'][logical_dest]
+                    new_physical_dest = self.processor_state['FreeList'].pop(0)
+                    self.processor_state['RegisterMapTable'][logical_dest] = new_physical_dest
+                    # import ipdb; ipdb.set_trace()
+
+                    # update ActiveList
+                    cur_actlist = ActiveListEntry(
+                            LogicalDestination=logical_dest, 
+                            OldDestination=old_physical_dest, 
+                            PC=ins)
+                    self.actlist.append(cur_actlist)
+                    self.processor_state['ActiveList'].append(
+                        json.loads(
+                            json.dumps(cur_actlist.__dict__)))
+
+                    # update IntegerQueue
+                    OpAIsReady = False
+                    OpBIsReady = False
+                    OpARegTag = 0
+                    OpBRegTag = 0
+                    OpAValue = 0
+                    OpBValue = 0
+
+                    ## TODO: If OpA/OpB is calculated this cycle, make them ready
+                    
+                    logical_opA = int(operands[1][1:])
+                    OpAIsReady = not self.processor_state['BusyBitTable'][logical_opA]
+                    if OpAIsReady:
+                        OpAValue = self.processor_state['PhysicalRegisterFile'][logical_opA]
+                    else:
+                        OpARegTag = self.processor_state['RegisterMapTable'][logical_opA]
+
+                    if opr == 'addi':
+                        opr = 'add'
+                        OpBIsReady = True
+                        OpBValue = int(operands[2])
+                    else:
+                        logical_opB = int(operands[2][1:])
+                        OpBIsReady = not self.processor_state['BusyBitTable'][logical_opB]
+                        if OpBIsReady:
+                            OpBValue = self.processor_state['PhysicalRegisterFile'][logical_opB]
+                        else:
+                            OpBRegTag = self.processor_state['RegisterMapTable'][logical_opB]
+                        
+                    cur_intque = IntegerQueueEntry(DestRegister=new_physical_dest,
+                                          OpAIsReady=OpAIsReady,
+                                          OpARegTag=OpARegTag,
+                                          OpAValue=OpAValue,
+                                          OpBIsReady=OpBIsReady,
+                                          OpBRegTag=OpBRegTag,
+                                          OpBValue=OpBValue,
+                                          OpCode=opr,
+                                          PC=ins)
+                    self.intqueue.append(cur_intque)
+                    self.processor_state['IntegerQueue'].append(
+                        json.loads(
+                            json.dumps(cur_intque.__dict__)))
+                    # update BusybitTable
+                    self.processor_state['BusyBitTable'][new_physical_dest] = True
+                self.processor_state['DecodedPCs'] = []
+
+            else: 
+                self.handle_backpressure()
+
+
+            # ==================== stage 1 ====================
+            # 每个cycle fetch 4 instructions
+            # fetch and decode
+
             to_fetch = min(4, len(self.instructions) - self.processor_state['PC'] - 1)
+            if flag_backpressure:
+                to_fetch = 0
             for i in range(to_fetch):
                 # Only for test
                 print("[INFO] fetching: ", self.processor_state['PC'])
                 self.processor_state['DecodedPCs'].append(self.processor_state['PC'])
                 self.processor_state['PC'] += 1
             
-            for 
-                        
+            # Only for test
+            debug_std_out = "test/given_tests/01/output.json"  # 根据需要调整路径
+            debug_std_out = json.loads(open(debug_std_out).read())[count_cycle]
+            # print(debug_std_out['IntegerQueue'])
+            print("[INFO] Debugging: cycle = ", count_cycle)
+            self.debug_check_same(debug_std_out)
+            count_cycle += 1
+
+            import ipdb; ipdb.set_trace()
             self.append_logs()
-            # import ipdb; ipdb.set_trace()
             # cycle 0, 1是对的
             
 
@@ -60,8 +174,12 @@ class Simulator:
         print(json.dumps(self.processor_state, indent=4))
     
     def debug_check_same(self, std_state):
-        mystate = json.loads(json.dumps(self.processor_state))
         # check if two json are the same
+
+        mystate = json.loads(json.dumps(self.processor_state))
+        # print(mystate)
+        # print(std_state)
+
         if mystate == std_state:
             print("两个JSON对象相同")
         else:
