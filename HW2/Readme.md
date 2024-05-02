@@ -69,3 +69,11 @@ cd /home/root/cs470
 
 If you have any questions when installing / running docker, please talk to a TA, we would be happy
 to help.
+
+
+For Test
+```
+./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/01/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/01/simple_ref.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/01/pip_ref.json
+
+./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/simple_ref.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/pip_ref.json
+```
