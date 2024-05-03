@@ -1,11 +1,15 @@
 class Instruction:
+    MUL_OPS = ["mulu"]
     ALU_OPS = ["add", "sub", "mulu", "addi"]
     MEM_OPS = ["ld", "st"]
     LOOP_OPS = ["loop", "loop.pip"]
     NOP_OPS = ["nop"]
     MOV_OPS = ["mov"]
 
-    def __init__(self, text):
+    def __init__(self, text, id=None):
+        # import ipdb; ipdb.set_trace()
+        self.id = id
+
         self.operation, self.operands = self.parse_instruction(text)
         self.opA = None
         self.opB = None
@@ -13,6 +17,7 @@ class Instruction:
         self.dst = None
         self.src = None
 
+        self.bool = None
         self.immediate = None
         self.addr = None
 
@@ -22,6 +27,9 @@ class Instruction:
         self.LC = None
         self.EC = None
 
+        self.local_dependencies = []
+        self.loop_dependencies = []
+        self.post_loop_dependencies = []
 
         if self.operation in self.ALU_OPS:
             self.dst = self.operands[0]
@@ -36,9 +44,9 @@ class Instruction:
             self.immediate = self.operands[1].split("(")[0]
             self.addr = self.operands[1].split("(")[1].split(")")[0]
             
-            print("dst: ", self.dst)
-            print("immediate: ", self.immediate)
-            print("addr: ", self.addr)
+            # print("dst: ", self.dst)
+            # print("immediate: ", self.immediate)
+            # print("addr: ", self.addr)
         
         if self.operation in self.LOOP_OPS:
             self.loopStart = self.operands[0]
@@ -48,14 +56,24 @@ class Instruction:
         
         if self.operation in self.MOV_OPS:
             self.dst = self.operands[0]
-            self.src = self.operands[1]
+            if self.operands[1].isdigit():
+                self.immediate = self.operands[1]
+            elif self.operands[1] in ("true", "false"):
+                # actually won't happen in the input
+                self.bool = self.operands[1]
+            else:
+                self.src = self.operands[1]
         
-        self.immediate = int(self.immediate) if self.immediate is not None else None
+        # self.immediate = int(self.immediate) if self.immediate is not None else None
+        self.loopStart = int(self.loopStart) if self.loopStart is not None else None
     
     def parse_instruction(self, text):
         # Parse the instruction text and return the operation and operands
         parts = text.split()
+        parts = [p.strip(",") for p in parts]
         return parts[0], parts[1:]
     
     def __str__(self):
         return "{} {}".format(self.operation, " ".join(self.operands))
+
+CONST_NOP = Instruction("nop")

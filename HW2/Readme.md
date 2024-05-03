@@ -73,7 +73,12 @@ to help.
 
 For Test
 ```
-./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/01/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/01/simple_ref.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/01/pip_ref.json
+basic one:
+./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/01/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/01/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/01/pip_mine.json
 
-./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/simple_ref.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/pip_ref.json
+with loop:
+./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/pip_mine.json
+
+has dependencies:
+./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/10/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/10/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/10/pip_mine.json
 ```
