@@ -1,4 +1,4 @@
-class Scheduler:
+class Scheduler_simp:
     def __init__(self, processor):
         self.processor = processor
     
