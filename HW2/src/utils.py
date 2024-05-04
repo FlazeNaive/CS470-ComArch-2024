@@ -1,5 +1,6 @@
 def debug_print_ins(ins):
-    print(ins.id, ": ", ins)
+    # print(ins.id, ": ", ins)
+
     # print("operation: ", ins.operation)
     # print("dst: ", ins.dst)
     # print("opA: ", ins.opA)
@@ -20,6 +21,7 @@ def debug_print_ins(ins):
     # print("loop_invariant: ")
     # print(ins.loop_invariant)
 
+    print(ins.str_new())
     print()
 
 def debug_print_blockes(BB, name="BB"):

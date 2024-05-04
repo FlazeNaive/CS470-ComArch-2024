@@ -1,0 +1,16 @@
+[
+    [
+        "mov LC, 100",
+        "mov x1, 0",
+        "nop",
+        "nop",
+        "nop"
+    ],
+    [
+        "mov x2, 1",
+        "nop",
+        "nop",
+        "nop",
+        "nop"
+    ]
+]

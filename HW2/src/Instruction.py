@@ -17,13 +17,14 @@ class Instruction:
         self.opA = None
         self.opB = None
         self.src = None
+        self.addr = None
         self.opA_new = None
         self.opB_new = None
         self.src_new = None
+        self.addr_new = None
 
         self.bool = None
         self.immediate = None
-        self.addr = None
 
         self.loopStart = None
 
@@ -84,5 +85,40 @@ class Instruction:
     
     def __str__(self):
         return "{} {}".format(self.operation, " ".join(self.operands))
+    
+    def str_new(self):
+        rtn = "{} ".format(self.operation)
+
+        if self.operation in self.ALU_OPS:
+            rtn += "{}, {}, ".format(self.dst_new, self.opA_new)
+            if self.operation == "addi":
+                rtn += "{}".format(self.immediate)
+            else:
+                rtn += "{}".format(self.opB_new)
+
+        if self.operation in self.MEM_OPS:
+            if self.operation == "ld":
+                rtn += "{}, ".format(self.dst_new)
+            elif self.operation == "st":
+                rtn += "{}, ".format(self.src_new)
+            rtn += "{}({})".format(self.immediate, self.addr_new)
+
+        if self.operation in self.LOOP_OPS:
+            rtn += "{}".format(self.loopStart)
+
+        if self.operation in self.NOP_OPS:
+            rtn 
+
+        if self.operation in self.MOV_OPS:
+            rtn += "{}, ".format(self.dst_new)
+            if self.immediate is not None:
+                rtn += "{}".format(self.immediate)
+            elif self.bool is not None:
+                rtn += "{}".format(self.bool)
+            else:
+                rtn += "{}".format(self.src_new)
+
+        return rtn
+
 
 CONST_NOP = Instruction("nop")
