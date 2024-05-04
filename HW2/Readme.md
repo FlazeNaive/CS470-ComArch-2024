@@ -81,4 +81,16 @@ with loop:
 
 has dependencies:
 ./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/10/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/10/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/10/pip_mine.json
+
+has interloop dependency:
+./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/11/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/11/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/11/pip_mine.json
+
+single invar:
+./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/13/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/13/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/13/pip_mine.json
+
+
+./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/14/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/14/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/14/pip_mine.json
+
+# 自定义
+./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/18/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/18/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/18/pip_mine.json
 ```

@@ -11,11 +11,15 @@ class Instruction:
         self.id = id
 
         self.operation, self.operands = self.parse_instruction(text)
+        self.dst = None
+        self.dst_new = None
+
         self.opA = None
         self.opB = None
-
-        self.dst = None
         self.src = None
+        self.opA_new = None
+        self.opB_new = None
+        self.src_new = None
 
         self.bool = None
         self.immediate = None
@@ -27,9 +31,11 @@ class Instruction:
         self.LC = None
         self.EC = None
 
-        self.local_dependencies = []
-        self.loop_dependencies = []
+        # === Dependencies ===
+        self.local_dependencies = []                # [(opname, id_instruction)]
+        self.interloop_dependencies = {}            # {opname: {'BB0': id_ins, 'BB1': id_ins} }
         self.post_loop_dependencies = []
+        self.loop_invariant = []
 
         if self.operation in self.ALU_OPS:
             self.dst = self.operands[0]
@@ -40,7 +46,10 @@ class Instruction:
                 self.opB = self.operands[2]
         
         if self.operation in self.MEM_OPS:
-            self.dst = self.operands[0]
+            if self.operation == "ld":
+                self.dst = self.operands[0]
+            elif self.operation == "st":
+                self.src = self.operands[0]
             self.immediate = self.operands[1].split("(")[0]
             self.addr = self.operands[1].split("(")[1].split(")")[0]
             
