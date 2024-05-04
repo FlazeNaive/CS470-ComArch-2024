@@ -1,15 +1,17 @@
 from InParser import parse_input, parse_blockes
+
 from Processor import Processor
-from Scheduler import calculate_dependencies
+from Dependencies import calculate_dependencies
+from Scheduler import Scheduler_simp
 from RegAlloc import RegisterAllocator_simp
-from OutGenerator import generate_output_simp, generate_output_pip
+
 from Instruction import CONST_NOP
 from utils import debug_print_ins, debug_print_blockes
+from OutGenerator import generate_output_simp, generate_output_pip
 
 def main(input_json, output_json_simp, output_json_pip):
     instructions = parse_input(input_json)
     processor = Processor()
-    # scheduler = Scheduler(processor)
     allocator = RegisterAllocator_simp(processor)
 
     BB0, BB1, BB2, flag_has_loop, loop_start = parse_blockes(instructions)
@@ -21,13 +23,15 @@ def main(input_json, output_json_simp, output_json_pip):
     
     calculate_dependencies(BB0, BB1, BB2)
 
-    debug_print_blockes(BB0, "BB0")
-    debug_print_blockes(BB1, "BB1")
-    debug_print_blockes(BB2, "BB2")
+    # debug_print_blockes(BB0, "BB0")
+    # debug_print_blockes(BB1, "BB1")
+    # debug_print_blockes(BB2, "BB2")
 
     print("========================================")
-    print("======= SPLIT into BLOCKES =======")
+    print("======= DEPENDENCIES DONE =======")
     print("========================================")
+
+    
 
     allocator.allocate_registers(instructions)
     # debug_print_blockes(instructions, "Instructions")
