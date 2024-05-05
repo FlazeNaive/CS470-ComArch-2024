@@ -1,1 +1,16 @@
-[]
+[
+  [
+    "mov None, 100",
+    "addi None, None, 10",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "add None, None, None",
+    "sub None, None, None",
+    "nop",
+    "ld None, 0(None)",
+    "loop.pip 1"
+  ]
+]

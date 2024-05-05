@@ -1,1 +1,65 @@
-[]
+[
+  [
+    "mov None, 100",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "ld None, 4096(None)",
+    "nop"
+  ],
+  [
+    "addi None, None, 1",
+    "nop",
+    "nop",
+    "ld None, 8192(None)",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "mulu None, None, None",
+    "st None, 4096(None)",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "nop",
+    "loop.pip 1"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "st None, 8192(None)",
+    "nop"
+  ]
+]

@@ -1,1 +1,44 @@
-[]
+[
+  [
+    "addi None, None, 10",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "add None, None, None",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "mulu None, None, None",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "sub None, None, None",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ]
+]

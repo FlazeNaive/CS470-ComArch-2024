@@ -82,6 +82,8 @@ basic one:
 with loop:
 ./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/04/pip_mine.json
 
+./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/09/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/09/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/09/pip_mine.json
+
 has dependencies:
 ./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/10/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/10/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/10/pip_mine.json
 

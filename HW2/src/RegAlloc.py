@@ -1,6 +1,132 @@
 from Scheduler import Scheduler
 from Instruction import Instruction
 
+class RegisterAllocator_pip:
+    reg_dict = {}
+    ins_stage = []
+    
+    def __init__(self, processor):
+        self.processor = processor
+        self.cnt_reg_nonrot = 0
+        self.cnt_reg = 0
+        self.reg_base = 32
+    
+    nonvar_ins = set()
+
+    def simp_alloc(self, instructions, BB, bundles):
+        for bundle in bundles:
+            for ins in bundle:
+                if ins is None or ins == '--':
+                    continue
+                if ins.dst not in {None, "LC", "EC"} and ins.dst_new is None:
+                    self.cnt_reg_nonrot += 1
+                    ins.dst_new = "x" + str(self.cnt_reg_nonrot)
+        for ins in BB:
+            for (opname, id) in ins.local_dependencies:
+                if getattr(ins, opname + "_new") is None:
+                    setattr(ins, opname + "_new", instructions[id].dst_new)
+
+    def allocate_registers(self, instructions, scheduler, BB0, BB1, BB2):
+        self.ins_stage = [None for i in range(len(instructions) + 1)]
+
+        # phase1
+        for bundle in scheduler.bundles:
+            for ins in bundle:
+                if ins is not None and ins != '--':
+                    if ins.dst in {"LC", "EC"}:
+                        ins.dst_new = ins.dst
+        
+        cnt_stage = 0
+        cnt_in_stage = 0
+        for bundle in scheduler.bundles[scheduler.time_start_of_loop : scheduler.time_end_of_loop]:
+            for ins in bundle:
+                if ins is not None and ins != '--':
+                    self.ins_stage[ins.id] = cnt_stage
+                    if ins.dst not in {None, "LC", "EC"}:
+                        ins.dst_new = "x" + str(self.reg_base + self.cnt_reg * scheduler.II)
+                        self.cnt_reg += 1
+            cnt_in_stage += 1
+            if cnt_in_stage == scheduler.II:
+                cnt_in_stage = 0
+                cnt_stage += 1
+
+        # phase2
+        for ins in instructions:
+            for (opname, id) in ins.loop_invariant:
+                # import ipdb; ipdb.set_trace()
+                self.nonvar_ins.add(id)
+                
+        print(self.nonvar_ins)
+        for nonvar_id in self.nonvar_ins:
+            self.cnt_reg_nonrot += 1
+            # import ipdb; ipdb.set_trace()
+            instructions[nonvar_id].dst_new = "x" + str(self.cnt_reg_nonrot)
+
+
+        # phase3
+        for ins in BB1:
+            for (opname, id) in ins.loop_invariant:
+                setattr(ins, opname + "_new", instructions[id].dst_new)
+            
+            for (opname, id) in ins.local_dependencies:
+                St_D = self.ins_stage[ins.id]
+                St_S = self.ins_stage[id]
+                src_reg = instructions[id].dst_new
+                src_reg_id = int(src_reg[1:])
+                new_reg_id = src_reg_id + (St_D - St_S)
+                # print(src_reg_id)
+                # print(new_reg_id)
+                # print("")
+                setattr(ins, opname + "_new", "x" + str(new_reg_id))
+                
+            for (opname) in ins.interloop_dependencies:
+                # print(ins)
+                # import ipdb; ipdb.set_trace()
+                aim_ins = ins.interloop_dependencies[opname]['BB1']
+                St_D = self.ins_stage[ins.id]
+                St_S = self.ins_stage[aim_ins]
+                src_reg = instructions[aim_ins].dst_new
+                src_reg_id = int(src_reg[1:])
+                new_reg_id = src_reg_id + (St_D - St_S) + 1
+                setattr(ins, opname + "_new", "x" + str(new_reg_id))
+                
+                
+        # phase 4
+        for ins in BB1:
+            for (opname) in ins.interloop_dependencies:
+                BB0_id = ins.interloop_dependencies[opname]['BB0']
+                BB1_id = ins.interloop_dependencies[opname]['BB1']
+                src_reg = instructions[BB1_id].dst_new
+                src_reg_id = int(src_reg[1:])
+                stage_offset = -self.ins_stage[BB1_id]
+                iter_offset = 1
+                new_reg_id = src_reg_id + stage_offset + iter_offset
+                instructions[BB0_id].dst_new = "x" + str(new_reg_id)
+
+            # within BB0/BB2
+        self.simp_alloc(instructions, BB0, scheduler.bundles[:scheduler.time_start_of_loop])
+        self.simp_alloc(instructions, BB2, scheduler.bundles[scheduler.time_end_of_loop:])
+
+        for ins in BB2:
+            for (opname, id) in ins.post_loop_dependencies:
+                src_reg = instructions[id].dst_new
+                src_reg_id = int(src_reg[1:])
+                iter_offset = 0
+                max_stage = 0
+                for i in range(len(instructions) + 1):
+                    if self.ins_stage[i] is not None:
+                        max_stage = max(max_stage, self.ins_stage[i])
+                stage_offset = max_stage - self.ins_stage[id]
+                new_reg_id = src_reg_id + stage_offset + iter_offset
+                setattr(ins, opname + "_new", "x" + str(new_reg_id))
+
+
+        scheduler.print()
+        # print(scheduler.bundles[1][1])
+        # print(scheduler.bundles[1][1].dst_new)
+        # print(instructions[3])
+        # print(instructions[3].dst_new)
+        pass
 
 class RegisterAllocator_simp:
     reg_dict = {}

@@ -349,6 +349,10 @@ class Scheduler:
         return ret
 
     def schedule_pip_BB1(self, instructions, BB0, BB1):
+        if len(BB1) == 0:
+            self.time_start_of_loop = len(self.bundles)
+            self.time_end_of_loop = len(self.bundles)
+            return
         lowest_time_start_loop = len(self.bundles)
         for ins in BB1:
             for (opname, id) in ins.loop_invariant:
@@ -411,7 +415,7 @@ class Scheduler:
             self.spread_reserved()
         
         time_to_jump = self.time_start_of_loop + self.II - 1
-        self.bundles[time_to_jump][4] = Instruction("loop.pip " + str(self.time_start_of_loop))
+        self.bundles[time_to_jump][4] = Instruction("loop.pip " + str(self.time_start_of_loop), len(instructions))
         
 
     def schedule_pip(self, instructions, BB0, BB1, BB2, flag_has_loop, loop_start):
@@ -419,15 +423,27 @@ class Scheduler:
         self.schedule_BB0(instructions, BB0)
 
         self.II = self.lowerboundII(BB1)
+        if self.II == 0:
+            self.II = 1
         # print("II = ", self.II)
 
         self.schedule_pip_BB1(instructions, BB0, BB1)    
 
+        self.time_end_of_loop = len(self.bundles)
+
         self.schedule_BB2(instructions, BB2)
 
+        # self.print()
+    
+    def print(self):
         print("II = ", self.II)
         for bundle in self.bundles:
             for ins in bundle:
-                print(ins, end="\t\t ")
+                # print(ins, end="\t\t ")
+                if ins is not None and ins != "--":
+                    print(ins.str_new(), end="\t\t")
+                else:
+                    print("--", end="\t\t")
             print()
+        
 

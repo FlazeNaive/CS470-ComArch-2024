@@ -1,1 +1,16 @@
-[]
+[
+  [
+    "add None, None, None",
+    "addi None, None, 6",
+    "mulu None, None, None",
+    "ld None, 0(None)",
+    "nop"
+  ],
+  [
+    "sub None, None, None",
+    "mov None, 18",
+    "nop",
+    "st None, 0(None)",
+    "nop"
+  ]
+]

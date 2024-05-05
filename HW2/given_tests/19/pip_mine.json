@@ -1,1 +1,65 @@
-[]
+[
+  [
+    "mov LC, 100",
+    "mov x33, 4096",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "mov x42, 1",
+    "mov x1, 25",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "addi x32, x33, 1",
+    "nop",
+    "nop",
+    "ld x35, 0(x33)",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "mulu x38, x35, x1",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "mulu x41, x42, x35",
+    "nop",
+    "loop.pip 2"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "st x39, 0(x34)",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "st x42, 0(x33)",
+    "nop"
+  ]
+]
