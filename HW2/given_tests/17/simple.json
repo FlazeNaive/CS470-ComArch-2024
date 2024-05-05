@@ -1,7 +1,7 @@
 [
   [
     "mov LC, 100",
-    "mov x1, x8",
+    "mov x1, 4096",
     "nop",
     "nop",
     "nop"
@@ -42,21 +42,14 @@
     "nop"
   ],
   [
-    "mov None, x9",
+    "mov x1, x4",
     "nop",
     "nop",
     "st x6, 0(x1)",
     "nop"
   ],
   [
-    "mov None, x10",
-    "mov None, x11",
-    "nop",
-    "nop",
-    "nop"
-  ],
-  [
-    "mov None, x12",
+    "mov x2, x7",
     "nop",
     "nop",
     "nop",

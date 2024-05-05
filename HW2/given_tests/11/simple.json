@@ -14,7 +14,7 @@
     "nop"
   ],
   [
-    "mov None, x3",
+    "mov x1, x2",
     "nop",
     "nop",
     "nop",

@@ -22,7 +22,7 @@
   ],
   [
     "addi x4, x3, 1",
-    "mov None, x5",
+    "mov x1, x2",
     "nop",
     "nop",
     "loop 1"

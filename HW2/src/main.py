@@ -2,7 +2,7 @@ from InParser import parse_input, parse_blockes
 
 from Processor import Processor
 from Dependencies import calculate_dependencies
-from Scheduler import Scheduler_simp
+from Scheduler import Scheduler_simp, Scheduler_pip
 
 from RegAlloc import RegisterAllocator_simp
 
@@ -15,13 +15,14 @@ def main(input_json, output_json_simp, output_json_pip):
     processor = Processor()
     allocator = RegisterAllocator_simp(processor)
     schedule_simp_class = Scheduler_simp(processor)
+    schedule_pip_class = Scheduler_pip(processor)
 
     BB0, BB1, BB2, flag_has_loop, loop_start = parse_blockes(instructions)
 
     
-    print("========================================")
-    print("======= LOADED and PARSED =======")
-    print("========================================")
+    # print("========================================")
+    # print("======= LOADED and PARSED =======")
+    # print("========================================")
     
     calculate_dependencies(BB0, BB1, BB2)
 

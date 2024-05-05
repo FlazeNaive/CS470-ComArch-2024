@@ -35,8 +35,8 @@
     "nop"
   ],
   [
-    "mov None, x4",
-    "mov None, x5",
+    "mov x2, x3",
+    "nop",
     "nop",
     "nop",
     "loop 4"

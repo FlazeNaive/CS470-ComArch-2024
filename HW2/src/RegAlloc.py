@@ -4,7 +4,7 @@ from Instruction import Instruction
 
 class RegisterAllocator_simp:
     reg_dict = {}
-    need_mov_phase3 = []
+    need_mov_phase3 = set()
 
     def __init__(self, processor):
         self.processor = processor
@@ -82,7 +82,7 @@ class RegisterAllocator_simp:
                     # import ipdb; ipdb.set_trace()
 
                     # 把 BB1_id那条insttruction的 dest register的值 mov到 -> BB0对应 那个
-                    self.need_mov_phase3.append((BB0_id, BB1_id))
+                    self.need_mov_phase3.add((BB0_id, BB1_id))
 
         # phase 3
         # BB1_reg -> BB0_reg

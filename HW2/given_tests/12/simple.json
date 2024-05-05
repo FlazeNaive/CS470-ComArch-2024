@@ -21,15 +21,8 @@
     "nop"
   ],
   [
-    "mov None, x5",
-    "mov None, x6",
-    "nop",
-    "nop",
-    "nop"
-  ],
-  [
-    "mov None, x7",
-    "nop",
+    "mov x2, x4",
+    "mov x1, x3",
     "nop",
     "nop",
     "loop 2"

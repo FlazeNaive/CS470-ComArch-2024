@@ -7,7 +7,7 @@
     "nop"
   ],
   [
-    "mov x2, x5",
+    "mov x2, 4096",
     "nop",
     "nop",
     "nop",

@@ -50,7 +50,7 @@ class Scheduler_simp:
         return flag_inserted
 
     def insert_endofloop(self, ins, lowest_time=0):
-        import ipdb; ipdb.set_trace()
+        # import ipdb; ipdb.set_trace()
         cur_try = self.time_end_of_loop
         while cur_try < lowest_time:
             cur_try += 1
@@ -225,3 +225,7 @@ class Scheduler_simp:
         #     for ins in bundle:
         #         print(ins)
         #     print()
+
+
+class Scheduler_pip:
+    pass
