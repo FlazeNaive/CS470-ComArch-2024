@@ -1,4 +1,4 @@
-from Scheduler import Scheduler_simp
+from Scheduler import Scheduler
 from Instruction import Instruction
 
 

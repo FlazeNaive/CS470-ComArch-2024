@@ -1,4 +1,7 @@
-class Scheduler_simp:
+from math import ceil
+from Instruction import Instruction
+
+class Scheduler:
     MUL_OPS = ["mulu"]
     ALU_OPS = ["add", "sub", "mov", "addi"]
     MEM_OPS = ["ld", "st"]
@@ -12,7 +15,11 @@ class Scheduler_simp:
         self.time_table = []                     # [id_bundle], 下表是id_instruction
         self.processor = processor
 
+        self.II = 0
+
+        self.time_start_of_loop = 0
         self.time_end_of_loop = 0
+
     
     def insert_ASAP(self, ins, id_low):
         flag_inserted = False
@@ -48,6 +55,25 @@ class Scheduler_simp:
                     break
 
         return flag_inserted
+    
+    def insert_ASAP_pip(self, ins, id_low):
+        flag_inserted = self.insert_ASAP(ins, id_low)
+        # print("inserting: ", ins.id)
+        # print(ins)
+        # print("id_low: ", id_low)
+        # print(flag_inserted)
+        # print("")
+
+        if not flag_inserted:
+            return False
+        # import ipdb; ipdb.set_trace()
+        cur_time = self.time_table[ins.id]
+        for i_bundle in range(self.time_start_of_loop, len(self.bundles)):
+            if i_bundle != cur_time and (i_bundle - cur_time) % self.II == 0:
+                for j_unit in range(0, 5):
+                    if self.bundles[cur_time][j_unit] != None and self.bundles[i_bundle][j_unit] == None:
+                        self.bundles[i_bundle][j_unit] = '--'
+        return True
 
     def insert_endofloop(self, ins, lowest_time=0):
         # import ipdb; ipdb.set_trace()
@@ -86,6 +112,70 @@ class Scheduler_simp:
         if ins.operation in self.LOOP_OPS:
             self.bundles[count_bundles][4] = ins
     
+    def spread_reserved(self):
+        cur_i_bundle = len(self.bundles) - 1
+        # print("cur_i_bundle: ", cur_i_bundle)
+        # for ins in self.bundles[cur_i_bundle]:
+        #     print(ins, end="\t\t")
+        # print()
+        
+        # import ipdb; ipdb.set_trace()
+        for i in range(self.time_start_of_loop, cur_i_bundle):
+            # print("i = ", i)
+            # print("cur_bundle = ", self.bundles[i])
+            # import ipdb; ipdb.set_trace()
+            if (cur_i_bundle - i) % self.II == 0:
+                for j_unit in range(0, 5):
+                    if self.bundles[i][j_unit] != None:
+                        self.bundles[cur_i_bundle][j_unit] = "--"
+                    if self.bundles[cur_i_bundle][j_unit] != None and self.bundles[i][j_unit] == None:
+                        self.bundles[i][j_unit] = "--"
+            
+    def append_pip(self, ins, lowest_time=0):
+        # print(ins.id)
+        # print(ins)
+
+        # import ipdb; ipdb.set_trace()
+        count_bundles = len(self.bundles) 
+        self.bundles.append([None, None, None, None, None])
+        self.spread_reserved()
+
+        while len(self.bundles) <= lowest_time:
+            self.bundles.append([None, None, None, None, None])
+            self.spread_reserved()
+        
+        flag_inserted = False
+        count_bundles = len(self.bundles) - 1
+        while not flag_inserted:
+            if ins.operation in self.ALU_OPS:
+                if self.bundles[count_bundles][0] == None:
+                    self.bundles[count_bundles][0] = ins
+                    flag_inserted = True
+                elif self.bundles[count_bundles][1] == None:
+                    self.bundles[count_bundles][1] = ins
+                    flag_inserted = True
+            elif ins.operation in self.MUL_OPS:
+                if self.bundles[count_bundles][2] == None:
+                    self.bundles[count_bundles][2] = ins
+                    flag_inserted = True
+            elif ins.operation in self.MEM_OPS:
+                if self.bundles[count_bundles][3] == None:
+                    self.bundles[count_bundles][3] = ins
+                    flag_inserted = True
+            # elif ins.operation in self.LOOP_OPS:
+            #     if self.bundles[count_bundles][4] == None:
+            #         self.bundles[count_bundles][4] = ins
+            #         flag_inserted = True
+            if not flag_inserted:
+                self.bundles.append([None, None, None, None, None])
+                self.spread_reserved()
+                count_bundles = len(self.bundles) - 1
+            else:
+                self.spread_reserved()
+
+        count_bundles = len(self.bundles) - 1
+        self.time_table[ins.id] = count_bundles
+    
 
     def schedule_BB0(self, instructions, BB0):
         flag_added = [False for i in range(0, len(BB0))]
@@ -113,6 +203,8 @@ class Scheduler_simp:
 
 
     def schedule_BB1(self, instructions, BB1):
+        if len(BB1) == 0:
+            return
         # import ipdb; ipdb.set_trace()
         lowest_time_start_loop = len(self.bundles)
         for ins in BB1:
@@ -226,6 +318,116 @@ class Scheduler_simp:
         #         print(ins)
         #     print()
 
+    def lowerboundII(self, BB1):
+        count_units = [0, 0, 0, 0]
+        for ins in BB1:
+            if ins.operation in self.ALU_OPS:
+                count_units[0] += 1
+            elif ins.operation in self.MUL_OPS:
+                count_units[1] += 1
+            elif ins.operation in self.MEM_OPS:
+                count_units[2] += 1
+            elif ins.operation in self.LOOP_OPS:
+                count_units[3] += 1
+        count_units[0] = ceil(count_units[0] / 2)
+        return max(count_units)
 
-class Scheduler_pip:
-    pass
+    def check_interloop_dependencies(self, instructions, BB1):
+        ret = True
+        for ins in BB1:
+            for (opmap) in ins.interloop_dependencies:
+                # import ipdb; ipdb.set_trace()
+                aim_ins = instructions[ ins.interloop_dependencies[opmap]['BB1'] ]
+                time_aim_ins = self.time_table[aim_ins.id]
+                time_cur_ins = self.time_table[ins.id]
+                latency = 1
+                if aim_ins.operation in self.MUL_OPS:
+                    latency = 3
+                if time_aim_ins + latency > time_cur_ins + self.II:
+                    ret = False
+                    return ret
+        return ret
+
+    def schedule_pip_BB1(self, instructions, BB0, BB1):
+        lowest_time_start_loop = len(self.bundles)
+        for ins in BB1:
+            for (opname, id) in ins.loop_invariant:
+                aim_ins = instructions[id]
+                ins_latency = 1
+                if aim_ins.operation in self.MUL_OPS:
+                    ins_latency = 3
+                lowest_time_start_loop = max(lowest_time_start_loop, 
+                                              self.time_table[aim_ins.id] + ins_latency)
+            for (opmap) in ins.interloop_dependencies:
+                # import ipdb; ipdb.set_trace()
+                # for BBname in ins.interloop_dependencies[opmap]:
+                #    print(ins.interloop_dependencies[opmap][BBname])
+
+                if 'BB0' in ins.interloop_dependencies[opmap]:
+                    aim_ins = instructions[ ins.interloop_dependencies[opmap]['BB0'] ]
+                    ins_latency = 1
+                    if aim_ins.operation in self.MUL_OPS:
+                        ins_latency = 3
+                    lowest_time_start_loop = max(lowest_time_start_loop, 
+                                                  self.time_table[aim_ins.id] + ins_latency)
+
+        self.time_start_of_loop = lowest_time_start_loop
+
+        while True:
+            flag_no_conflict = True
+            # print("II = ", self.II)
+
+            for ins in BB1[:-1]:
+                flag_inserted = False
+                lowest_time = lowest_time_start_loop
+                if ins.local_dependencies == []:
+                    flag_inserted = self.insert_ASAP_pip(ins, lowest_time)
+                else:
+                    for (opname, id) in ins.local_dependencies:
+                        aim_ins = instructions[id]
+                        ins_latency = 1
+                        if aim_ins.operation in self.MUL_OPS:
+                            ins_latency = 3
+                        # import ipdb; ipdb.set_trace()
+                        lowest_time = max(lowest_time, 
+                                          self.time_table[aim_ins.id] + ins_latency)
+                    flag_inserted = self.insert_ASAP_pip(ins, lowest_time) 
+
+                if not flag_inserted:
+                    self.append_pip(ins, lowest_time=lowest_time)
+            
+            flag_no_conflict = self.check_interloop_dependencies(instructions, BB1)
+
+            if flag_no_conflict:
+                break
+            else:
+                self.II += 1
+                self.bundles = self.bundles[:self.time_start_of_loop]
+                for i in range(len(BB0), len(BB0) + len(BB1)):
+                    self.time_table[i] = None
+        
+        while (len(self.bundles) - self.time_start_of_loop) % self.II != 0:
+            self.bundles.append([None, None, None, None, None])
+            self.spread_reserved()
+        
+        time_to_jump = self.time_start_of_loop + self.II - 1
+        self.bundles[time_to_jump][4] = Instruction("loop.pip " + str(self.time_start_of_loop))
+        
+
+    def schedule_pip(self, instructions, BB0, BB1, BB2, flag_has_loop, loop_start):
+        self.time_table = [None for i in range(0, len(instructions))]
+        self.schedule_BB0(instructions, BB0)
+
+        self.II = self.lowerboundII(BB1)
+        # print("II = ", self.II)
+
+        self.schedule_pip_BB1(instructions, BB0, BB1)    
+
+        self.schedule_BB2(instructions, BB2)
+
+        print("II = ", self.II)
+        for bundle in self.bundles:
+            for ins in bundle:
+                print(ins, end="\t\t ")
+            print()
+
