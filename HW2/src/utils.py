@@ -1,5 +1,5 @@
 def debug_print_ins(ins):
-    # print(ins.id, ": ", ins)
+    print(ins.id, ": ", ins)
 
     # print("operation: ", ins.operation)
     # print("dst: ", ins.dst)
@@ -12,14 +12,14 @@ def debug_print_ins(ins):
     # print("opB_new: ", ins.opB_new)
     # print("src_new: ", ins.src_new)
 
-    # print("local_dependencies: ")
-    # print(ins.local_dependencies)
-    # print("interloop_dependencies: ")
-    # print(ins.interloop_dependencies)
-    # print("post_loop_dependencies: ")
-    # print(ins.post_loop_dependencies)
-    # print("loop_invariant: ")
-    # print(ins.loop_invariant)
+    print("local_dependencies: ")
+    print(ins.local_dependencies)
+    print("interloop_dependencies: ")
+    print(ins.interloop_dependencies)
+    print("post_loop_dependencies: ")
+    print(ins.post_loop_dependencies)
+    print("loop_invariant: ")
+    print(ins.loop_invariant)
 
     print(ins.str_new())
     print()

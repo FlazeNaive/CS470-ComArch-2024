@@ -31,10 +31,14 @@ def calculate_local_dependencies(BB):
                 break
 
 def interloop_dependencies_clean(BB, i, opname):
+    print(BB[i])
+    # import ipdb; ipdb.set_trace()
     if BB[i].interloop_dependencies.get(opname) is not None:
         # import ipdb; ipdb.set_trace()
         if BB[i].interloop_dependencies[opname] == {}:
             # no opA dependency
+            del BB[i].interloop_dependencies[opname]
+        elif any( xx[0] == opname for xx in BB[i].local_dependencies):
             del BB[i].interloop_dependencies[opname]
         elif BB[i].interloop_dependencies[opname].get('BB0') is not None and BB[i].interloop_dependencies[opname].get('BB1') is None:
             # import ipdb; ipdb.set_trace()

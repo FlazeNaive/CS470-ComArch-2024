@@ -9,7 +9,7 @@ class Scheduler_simp:
 
     def __init__(self, processor):
         self.bundles = []                        # [(ALU0, ALU1, Mult, Mem, Branch)]
-        self.time_table = []                     # [(id_instruction, id_bundle)]
+        self.time_table = []                     # [id_bundle], 下表是id_instruction
         self.processor = processor
     
     def insert_ASAP_BB0(self, BB0, ins, id_low):
@@ -47,7 +47,7 @@ class Scheduler_simp:
 
         return flag_inserted
 
-    def append_BB0(self, BB0, ins, lowest_time=0):
+    def append(self, ins, lowest_time=0):
         # import ipdb; ipdb.set_trace()
         self.bundles.append([None, None, None, None, None])
         while len(self.bundles) <= lowest_time:
@@ -85,7 +85,14 @@ class Scheduler_simp:
                 flag_inserted = self.insert_ASAP_BB0(BB0, ins, lowest_time) 
 
             if not flag_inserted:
-                self.append_BB0(BB0, ins, lowest_time=lowest_time)
+                self.append(ins, lowest_time=lowest_time)
+
+
+    def schedule_BB1(self, instructions, BB1):
+        self.append(BB1[0])
+        for ins in BB1[1:]:
+            pass
+
 
 
     def schedule_simp(self, instructions, BB0, BB1, BB2, flag_has_loop, loop_start):
@@ -93,7 +100,11 @@ class Scheduler_simp:
         # print(self.time_table)
         self.schedule_BB0(instructions, BB0)
         # print(self.time_table)
-        for bundle in self.bundles:
-            for ins in bundle:
-                print(ins)
-            print()
+
+        # for bundle in self.bundles:
+        #     for ins in bundle:
+        #         print(ins)
+        #     print()
+
+        self.schedule_BB1
+        # TODO: 记得改loop的目标地址

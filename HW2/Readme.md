@@ -93,4 +93,6 @@ single invar:
 
 # 自定义
 ./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/18/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/18/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/18/pip_mine.json
+
+./run.sh /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/19/input.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/19/simple_mine.json /home/flaze/semester4/CS470-Homeworks-2024/HW2/given_tests/19/pip_mine.json
 ```

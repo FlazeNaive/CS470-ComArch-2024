@@ -29,7 +29,7 @@ def main(input_json, output_json_simp, output_json_pip):
     # debug_print_blockes(BB1, "BB1")
     # debug_print_blockes(BB2, "BB2")
 
-    # debug_print_blockes(instructions, "Instructions")
+    debug_print_blockes(instructions, "Instructions")
 
     print("========================================")
     print("======= DEPENDENCIES DONE =======")
