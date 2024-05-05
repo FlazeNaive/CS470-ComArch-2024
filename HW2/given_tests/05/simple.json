@@ -1,16 +1,16 @@
 [
-    [
-        "addi x1, x3, 1",
-        "nop",
-        "nop",
-        "nop",
-        "nop"
-    ],
-    [
-        "addi x2, x1, 10",
-        "nop",
-        "nop",
-        "nop",
-        "nop"
-    ]
+  [
+    "addi x1, x3, 1",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "addi x2, x1, 10",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ]
 ]

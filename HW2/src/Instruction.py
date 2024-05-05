@@ -66,7 +66,7 @@ class Instruction:
         
         if self.operation in self.MOV_OPS:
             self.dst = self.operands[0]
-            if self.operands[1].isdigit():
+            if self.operands[1].isdigit() or self.operands[1].startswith("0x"):
                 self.immediate = self.operands[1]
             elif self.operands[1] in ("true", "false"):
                 # actually won't happen in the input
@@ -75,6 +75,12 @@ class Instruction:
                 self.src = self.operands[1]
         
         # self.immediate = int(self.immediate) if self.immediate is not None else None
+        if self.immediate is not None:
+            if self.immediate.isdigit():
+                self.immediate = int(self.immediate)
+            elif self.immediate.startswith("0x"):
+                self.immediate = int(self.immediate, 16)
+
         self.loopStart = int(self.loopStart) if self.loopStart is not None else None
     
     def parse_instruction(self, text):

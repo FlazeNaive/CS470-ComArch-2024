@@ -40,7 +40,7 @@ def main(input_json, output_json_simp, output_json_pip):
     print("======= Schedule =======")
     print("========================================")
 
-    allocator.allocate_registers(instructions, schedule_simp_class.bundles)
+    allocator.allocate_registers(instructions, schedule_simp_class)
     # debug_print_blockes(instructions, "Instructions")
     
     print("========================================")

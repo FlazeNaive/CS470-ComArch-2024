@@ -31,7 +31,7 @@ def calculate_local_dependencies(BB):
                 break
 
 def interloop_dependencies_clean(BB, i, opname):
-    print(BB[i])
+    # print(BB[i])
     # import ipdb; ipdb.set_trace()
     if BB[i].interloop_dependencies.get(opname) is not None:
         # import ipdb; ipdb.set_trace()

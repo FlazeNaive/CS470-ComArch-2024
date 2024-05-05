@@ -1,16 +1,44 @@
 [
-    [
-        "mov LC, 100",
-        "mov x1, 5",
-        "nop",
-        "nop",
-        "nop"
-    ],
-    [
-        "nop",
-        "nop",
-        "mulu x2, x1, x1",
-        "nop",
-        "nop"
-    ]
+  [
+    "mov LC, 100",
+    "mov x1, 5",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "mulu x2, x1, x1",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "add x3, x2, x2",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "mov None, x4",
+    "mov None, x5",
+    "nop",
+    "nop",
+    "loop 4"
+  ]
 ]

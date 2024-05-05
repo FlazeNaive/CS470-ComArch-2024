@@ -1,9 +1,23 @@
 [
-    [
-        "mov LC, 100",
-        "mov x1, 0",
-        "nop",
-        "nop",
-        "nop"
-    ]
+  [
+    "mov LC, 100",
+    "mov x1, 0",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "addi x2, x1, 1",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "mov None, x3",
+    "nop",
+    "nop",
+    "nop",
+    "loop 1"
+  ]
 ]

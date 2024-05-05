@@ -1,9 +1,30 @@
 [
-    [
-        "mov x1, 10",
-        "nop",
-        "nop",
-        "nop",
-        "nop"
-    ]
+  [
+    "mov x1, 10",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "addi x2, x1, 1",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "addi x3, x2, 1",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "addi x4, x3, 1",
+    "mov None, x5",
+    "nop",
+    "nop",
+    "loop 1"
+  ]
 ]
