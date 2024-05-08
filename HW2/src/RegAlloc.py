@@ -30,6 +30,7 @@ class RegisterAllocator_pip:
         self.ins_stage = [None for i in range(len(instructions) + 1)]
 
         # phase1
+        # allocate new register in rotation, to dests in BB1
         for bundle in scheduler.bundles:
             for ins in bundle:
                 if ins is not None and ins != '--':
@@ -51,12 +52,13 @@ class RegisterAllocator_pip:
                 cnt_stage += 1
 
         # phase2
+        # allocate new register in non-rotation, to all loop invariant (srced in BB0)
         for ins in instructions:
             for (opname, id) in ins.loop_invariant:
                 # import ipdb; ipdb.set_trace()
                 self.nonvar_ins.add(id)
                 
-        print(self.nonvar_ins)
+        # print(self.nonvar_ins)
         for nonvar_id in self.nonvar_ins:
             self.cnt_reg_nonrot += 1
             # import ipdb; ipdb.set_trace()
@@ -64,6 +66,7 @@ class RegisterAllocator_pip:
 
 
         # phase3
+        # link all dependencies in BB1
         for ins in BB1:
             for (opname, id) in ins.loop_invariant:
                 setattr(ins, opname + "_new", instructions[id].dst_new)
@@ -92,21 +95,25 @@ class RegisterAllocator_pip:
                 
                 
         # phase 4
+        # lots of stepes
+        # step 1: interloop dependencies from BB0
         for ins in BB1:
             for (opname) in ins.interloop_dependencies:
-                BB0_id = ins.interloop_dependencies[opname]['BB0']
-                BB1_id = ins.interloop_dependencies[opname]['BB1']
-                src_reg = instructions[BB1_id].dst_new
-                src_reg_id = int(src_reg[1:])
-                stage_offset = -self.ins_stage[BB1_id]
-                iter_offset = 1
-                new_reg_id = src_reg_id + stage_offset + iter_offset
-                instructions[BB0_id].dst_new = "x" + str(new_reg_id)
+                if 'BB0' in ins.interloop_dependencies[opname]:
+                    BB0_id = ins.interloop_dependencies[opname]['BB0']
+                    BB1_id = ins.interloop_dependencies[opname]['BB1']
+                    src_reg = instructions[BB1_id].dst_new
+                    src_reg_id = int(src_reg[1:])
+                    stage_offset = -self.ins_stage[BB1_id]
+                    iter_offset = 1
+                    new_reg_id = src_reg_id + stage_offset + iter_offset
+                    instructions[BB0_id].dst_new = "x" + str(new_reg_id)
 
-            # within BB0/BB2
+        # step 2: local dependencies within BB0/BB2
         self.simp_alloc(instructions, BB0, scheduler.bundles[:scheduler.time_start_of_loop])
         self.simp_alloc(instructions, BB2, scheduler.bundles[scheduler.time_end_of_loop:])
 
+        # step 3: post loop dependencies in BB2
         for ins in BB2:
             for (opname, id) in ins.post_loop_dependencies:
                 src_reg = instructions[id].dst_new
@@ -120,6 +127,21 @@ class RegisterAllocator_pip:
                 new_reg_id = src_reg_id + stage_offset + iter_offset
                 setattr(ins, opname + "_new", "x" + str(new_reg_id))
 
+        # step 4: loop invariant used or BB2
+        for ins in BB2:
+            for (opname, id) in ins.loop_invariant:
+                src_reg = instructions[id].dst_new
+                setattr(ins, opname + "_new", src_reg)
+        
+        # step 5: assign new register to the unwritten ones
+        for bundle in scheduler.bundles:
+            for ins in bundle:
+                if ins is not None and ins != '--':
+                    for opname in {"opA", "opB", "src", "addr"}:
+                        if getattr(ins, opname) is not None and getattr(ins, opname + "_new") is None:
+                            self.cnt_reg_nonrot += 1
+                            setattr(ins, opname + "_new", "x" + str(self.cnt_reg_nonrot))
+                
 
         scheduler.print()
         # print(scheduler.bundles[1][1])

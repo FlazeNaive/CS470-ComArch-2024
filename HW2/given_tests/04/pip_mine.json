@@ -1,0 +1,23 @@
+[
+  [
+    "mov LC, 100",
+    "addi x1, None, 10",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "add x32, None, None",
+    "sub x33, None, None",
+    "nop",
+    "ld x34, 0(None)",
+    "loop.pip 1"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "st None, 0(None)",
+    "nop"
+  ]
+]
