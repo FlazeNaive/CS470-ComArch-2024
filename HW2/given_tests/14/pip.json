@@ -28,24 +28,24 @@
     "nop"
   ],
   [
-    "(p32) add x36, x32, x1",
+    "(p32) add x34, x32, x1",
     "nop",
     "nop",
-    "(p32) ld x40, 8192(x2)",
+    "(p32) ld x36, 8192(x2)",
     "nop"
   ],
   [
-    "(p32) sub x44, x40, x1",
+    "(p32) sub x38, x36, x1",
     "nop",
     "nop",
-    "(p32) st x36, 4096(x2)",
+    "(p32) st x34, 4096(x2)",
     "nop"
   ],
   [
     "nop",
     "nop",
     "nop",
-    "(p32) st x44, 8192(x2)",
-    "loop.pip 2"
+    "(p32) st x38, 8192(x2)",
+    "loop.pip 3"
   ]
 ]

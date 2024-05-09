@@ -7,7 +7,7 @@
     "nop"
   ],
   [
-    "mov x34, 1",
+    "mov x35, 1",
     "mov EC, 0",
     "nop",
     "nop",
@@ -22,9 +22,9 @@
   ],
   [
     "(p32) addi x32, x33, 1",
-    "(p32) add x33, x34, x34",
+    "(p32) add x34, x35, x35",
     "nop",
     "nop",
-    "loop.pip 2"
+    "loop.pip 3"
   ]
 ]

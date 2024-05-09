@@ -8,13 +8,6 @@
   ],
   [
     "mov x2, 4096",
-    "mov EC, 1",
-    "nop",
-    "nop",
-    "nop"
-  ],
-  [
-    "mov p32, true",
     "nop",
     "nop",
     "nop",
@@ -24,14 +17,21 @@
     "nop",
     "nop",
     "nop",
-    "(p32) ld x32, 0(x2)",
+    "ld x3, 0(x2)",
     "nop"
   ],
   [
-    "(p32) add x35, x32, x1",
+    "add x4, x3, x1",
     "nop",
     "nop",
-    "(p33) st x36, 0(x2)",
-    "loop.pip 3"
+    "nop",
+    "nop"
+  ],
+  [
+    "nop",
+    "nop",
+    "nop",
+    "st x4, 0(x2)",
+    "loop 2"
   ]
 ]

@@ -39,7 +39,7 @@
     "nop",
     "(p32) mulu x41, x42, x35",
     "nop",
-    "loop.pip 2"
+    "loop.pip 3"
   ],
   [
     "nop",

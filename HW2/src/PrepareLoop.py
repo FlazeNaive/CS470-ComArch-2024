@@ -46,15 +46,13 @@ class PrepareLoop:
 
         num_stage = len(scheduler.stages)
         new_mov1 = Instruction("mov p32, true", len(instructions))
-        new_mov_EC = Instruction("mov EC, {}".format(num_stage - 1), len(instructions) + 1)
+        instructions.append(new_mov1)
+        self.predicators.append(None)
+        new_mov_EC = Instruction("mov EC, {}".format(num_stage - 1), len(instructions))
+        instructions.append(new_mov_EC)
+        self.predicators.append(None)
 
-        # for ins in instructions:
-        #     print(ins)
-        # print("LOOP INSTRUCTION: ", scheduler.bundles[scheduler.time_start_of_loop + scheduler.II - 1][4])
-        # for bundle in scheduler.bundles:
-        #     for ins in bundle:
-        #         print(ins)
-        # scheduler.bundles[scheduler.time_start_of_loop + scheduler.II - 1][4].loopStart = scheduler.time_start_of_loop
+
 
         for stage_id, stage in enumerate(scheduler.stages):
             for bundle_id in stage:
@@ -64,20 +62,20 @@ class PrepareLoop:
 
         # self.print_pred(scheduler)
 
+        # print(scheduler.time_start_of_loop)
+        scheduler.insert_prepareLoop(new_mov_EC)
+        # print(scheduler.time_start_of_loop
+        scheduler.insert_prepareLoop(new_mov1)
+        # print(scheduler.time_start_of_loop)
+
+        print("LOOP INSTRUCTION: ", scheduler.bundles[scheduler.time_start_of_loop + scheduler.II - 1][4])
+        # for bundle in scheduler.bundles:
+        #     for ins in bundle:
+        #         print(ins)
+        scheduler.bundles[scheduler.time_start_of_loop + scheduler.II - 1][4].loopStart = scheduler.time_start_of_loop
 
         self.zip_stage(scheduler)
         # scheduler.print()
         # self.print_pred(scheduler)
 
-        
-        scheduler.insert_prepareLoop(new_mov_EC)
-        scheduler.insert_prepareLoop(new_mov1)
-        # for ins in instructions:
-        #     if ins.operation == 'loop.pip':
-        #         ins.loopStart = scheduler.time_start_of_loop
-
-        # scheduler.print()
-
-
-        pass
-    pass
+                # scheduler.print()

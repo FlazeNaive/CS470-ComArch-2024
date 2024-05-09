@@ -47,12 +47,13 @@ class RegisterAllocator_pip:
         
         cnt_stage = 0
         cnt_in_stage = 0
+        num_of_stage = int((scheduler.time_end_of_loop - scheduler.time_start_of_loop) / scheduler.II)
         for bundle in scheduler.bundles[scheduler.time_start_of_loop : scheduler.time_end_of_loop]:
             for ins in bundle:
                 if ins is not None and ins != '--':
                     self.ins_stage[ins.id] = cnt_stage
                     if ins.dst not in {None, "LC", "EC"}:
-                        ins.dst_new = "x" + str(self.reg_base + self.cnt_reg * scheduler.II)
+                        ins.dst_new = "x" + str(self.reg_base + self.cnt_reg * (num_of_stage + 1))
                         self.cnt_reg += 1
             cnt_in_stage += 1
             if cnt_in_stage == scheduler.II:

@@ -15,9 +15,9 @@
   ],
   [
     "(p32) add x32, x1, x2",
-    "(p32) sub x33, x3, x4",
+    "(p32) sub x34, x3, x4",
     "nop",
-    "(p32) ld x34, 0(x5)",
-    "loop.pip 1"
+    "(p32) ld x36, 0(x5)",
+    "loop.pip 2"
   ]
 ]
