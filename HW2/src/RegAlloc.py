@@ -11,7 +11,7 @@ class RegisterAllocator_pip:
         self.cnt_reg = 0
         self.reg_base = 32
     
-    nonvar_ins = set()
+    nonvar_ins = []
 
     def simp_alloc(self, instructions, BB, bundles):
         for bundle in bundles:
@@ -62,18 +62,20 @@ class RegisterAllocator_pip:
 
         # phase2
         # allocate new register in non-rotation, to all loop invariant (srced in BB0)
-        for ins in instructions:
-            for (opname, id) in ins.loop_invariant:
-                # import ipdb; ipdb.set_trace()
-                self.nonvar_ins.add(id)
-                
-        # print(self.nonvar_ins)
         for bundle in scheduler.bundles:
             for ins in bundle:
-                if ins is not None and ins != "--":
-                    if ins.id in self.nonvar_ins:
-                        self.cnt_reg_nonrot += 1
-                        instructions[ins.id].dst_new = "x" + str(self.cnt_reg_nonrot)
+                if ins is None or ins == '--':
+                    continue
+                for (opname, id) in ins.loop_invariant:
+                    # import ipdb; ipdb.set_trace()
+                    self.nonvar_ins.append(id)
+                
+        # print(self.nonvar_ins)
+        for id in self.nonvar_ins:
+            ins = instructions[id]
+            if ins.dst_new is None:
+                self.cnt_reg_nonrot += 1
+                instructions[id].dst_new = "x" + str(self.cnt_reg_nonrot)
 
         # phase3
         # link all dependencies in BB1
