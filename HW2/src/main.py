@@ -10,6 +10,8 @@ from Instruction import CONST_NOP
 from utils import debug_print_ins, debug_print_blockes
 from OutGenerator import generate_output_simp, generate_output_pip
 
+from PrepareLoop import PrepareLoop
+
 import copy
 
 def main(input_json, output_json_simp, output_json_pip):
@@ -59,9 +61,14 @@ def main(input_json, output_json_simp, output_json_pip):
     schedule_pip_class.schedule_pip(back_up_instructions, BB0, BB1, BB2, flag_has_loop, loop_start)
     allocator_pip.allocate_registers(back_up_instructions, schedule_pip_class, BB0, BB1, BB2)
 
+    prepareloop = PrepareLoop(processor)
+    if flag_has_loop:
+        # print("has_loop")
+        prepareloop.prepare(back_up_instructions, schedule_pip_class)
+
     # debug_print_blockes(instructions, "Instructions")
     
-    generate_output_pip(instructions, schedule_pip_class.bundles, output_json_pip)
+    generate_output_pip(instructions, prepareloop, schedule_pip_class.bundles, output_json_pip)
 
 if __name__ == "__main__":
     import sys

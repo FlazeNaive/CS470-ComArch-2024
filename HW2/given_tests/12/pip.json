@@ -1,21 +1,28 @@
 [
   [
-    "mov None, 100",
-    "mov None, 0",
+    "mov LC, 100",
+    "mov x33, 0",
     "nop",
     "nop",
     "nop"
   ],
   [
-    "mov None, 1",
+    "mov x34, 1",
+    "mov EC, 0",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "mov p32, true",
     "nop",
     "nop",
     "nop",
     "nop"
   ],
   [
-    "addi None, None, 1",
-    "add None, None, None",
+    "(p32) addi x32, x33, 1",
+    "(p32) add x33, x34, x34",
     "nop",
     "nop",
     "loop.pip 2"

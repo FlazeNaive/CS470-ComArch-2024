@@ -2,7 +2,7 @@
   [
     "nop",
     "nop",
-    "mulu None, None, None",
+    "mulu x1, x3, x4",
     "nop",
     "nop"
   ],
@@ -21,7 +21,7 @@
     "nop"
   ],
   [
-    "add None, None, None",
+    "add x2, x1, x1",
     "nop",
     "nop",
     "nop",

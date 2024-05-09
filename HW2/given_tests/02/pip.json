@@ -1,16 +1,23 @@
 [
   [
-    "mov None, 100",
+    "mov LC, 100",
+    "mov EC, 0",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "mov p32, true",
     "nop",
     "nop",
     "nop",
     "nop"
   ],
   [
-    "add None, None, None",
-    "sub None, None, None",
+    "(p32) add x32, x1, x2",
+    "(p32) sub x33, x3, x4",
     "nop",
-    "ld None, 0(None)",
+    "(p32) ld x34, 0(x5)",
     "loop.pip 1"
   ]
 ]

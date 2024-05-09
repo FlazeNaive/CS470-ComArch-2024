@@ -1,13 +1,20 @@
 [
   [
-    "mov None, 100",
-    "mov None, 0",
+    "mov LC, 100",
+    "mov x33, 0",
     "nop",
     "nop",
     "nop"
   ],
   [
-    "addi None, None, 1",
+    "mov EC, 0",
+    "mov p32, true",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "(p32) addi x32, x33, 1",
     "nop",
     "nop",
     "nop",

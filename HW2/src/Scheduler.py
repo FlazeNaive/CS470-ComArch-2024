@@ -11,7 +11,10 @@ class Scheduler:
 
 
     def __init__(self, processor):
+        self.stages = []                          # 每个stage里有哪些bundle
+
         self.bundles = []                        # [(ALU0, ALU1, Mult, Mem, Branch)]
+        self.predicator = []
         self.time_table = []                     # [id_bundle], 下表是id_instruction
         self.processor = processor
 
@@ -20,6 +23,18 @@ class Scheduler:
         self.time_start_of_loop = 0
         self.time_end_of_loop = 0
 
+    def insert_prepareLoop(self, ins):
+        cur_time = self.time_start_of_loop - 1
+        if self.bundles[cur_time][0] == None:
+            self.bundles[cur_time][0] = ins
+        elif self.bundles[cur_time][1] == None:
+            self.bundles[cur_time][1] = ins
+        else:
+            self.bundles.insert(cur_time + 1, [None, None, None, None, None])
+            self.time_start_of_loop += 1
+            self.time_end_of_loop += 1
+            cur_time += 1
+            self.bundles[cur_time][0] = ins
     
     def insert_ASAP(self, ins, id_low):
         flag_inserted = False
@@ -415,7 +430,9 @@ class Scheduler:
             self.spread_reserved()
         
         time_to_jump = self.time_start_of_loop + self.II - 1
-        self.bundles[time_to_jump][4] = Instruction("loop.pip " + str(self.time_start_of_loop), len(instructions))
+        new_instruction = Instruction("loop.pip " + str(self.time_start_of_loop), len(instructions))
+        instructions.append(new_instruction)
+        self.bundles[time_to_jump][4] = new_instruction
         
 
     def schedule_pip(self, instructions, BB0, BB1, BB2, flag_has_loop, loop_start):
@@ -433,6 +450,8 @@ class Scheduler:
 
         self.schedule_BB2(instructions, BB2)
 
+        self.predicator = [ [None for i in range(5)] for j in range(len(self.bundles)) ]
+
         # self.print()
     
     def print(self):
@@ -445,5 +464,34 @@ class Scheduler:
                 else:
                     print("--", end="\t\t")
             print()
-        
+    
+    def calculate_stage(self):
+        cnt_stage = 0
+        cnt_in_stage = 0
+        for id, _ in enumerate(self.bundles[self.time_start_of_loop:self.time_end_of_loop]):
+            if cnt_in_stage == 0:
+                self.stages.append([])
+            self.stages[cnt_stage].append(id + self.time_start_of_loop)
 
+            cnt_in_stage += 1
+            if cnt_in_stage == self.II:
+                cnt_stage += 1
+                cnt_in_stage = 0
+    
+    def print_loop(self):
+        print("\n============== BB1 ==========================")
+        print("start: ", self.time_start_of_loop)
+        print("end: ", self.time_end_of_loop)
+
+        for stage_id, stage in enumerate(self.stages):
+            print("========================================")
+            print("Stage: ", stage_id)
+            for bundle_id in stage:
+                bundle = self.bundles[bundle_id]
+                for ins in bundle:
+                    if ins is not None and ins != "--":
+                        print(ins.str_new(), end="\t\t")
+                    else:
+                        print("--", end="\t\t")
+
+                print()

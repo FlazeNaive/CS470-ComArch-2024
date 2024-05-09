@@ -1,13 +1,13 @@
 [
   [
-    "addi None, None, 10",
+    "addi x1, x5, 10",
     "nop",
     "nop",
     "nop",
     "nop"
   ],
   [
-    "add None, None, None",
+    "add x2, x1, x1",
     "nop",
     "nop",
     "nop",
@@ -16,14 +16,7 @@
   [
     "nop",
     "nop",
-    "mulu None, None, None",
-    "nop",
-    "nop"
-  ],
-  [
-    "nop",
-    "nop",
-    "nop",
+    "mulu x3, x2, x2",
     "nop",
     "nop"
   ],
@@ -35,7 +28,14 @@
     "nop"
   ],
   [
-    "sub None, None, None",
+    "nop",
+    "nop",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "sub x4, x3, x3",
     "nop",
     "nop",
     "nop",

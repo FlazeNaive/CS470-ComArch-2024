@@ -94,6 +94,9 @@ class Instruction:
     
     def str_new(self):
         rtn = "{} ".format(self.operation)
+        if self.dst_new is None and self.dst is not None:
+            if self.dst.startswith("p") or self.dst == "EC" or self.dst == "LC":
+                self.dst_new = self.dst
 
         if self.operation in self.ALU_OPS:
             rtn += "{}, {}, ".format(self.dst_new, self.opA_new)

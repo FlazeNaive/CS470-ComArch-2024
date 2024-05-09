@@ -23,10 +23,18 @@ class RegisterAllocator_pip:
                     ins.dst_new = "x" + str(self.cnt_reg_nonrot)
         for ins in BB:
             for (opname, id) in ins.local_dependencies:
-                if getattr(ins, opname + "_new") is None:
-                    setattr(ins, opname + "_new", instructions[id].dst_new)
+                if opname == 'opA':
+                    ins.opA_new = instructions[id].dst_new
+                if opname == 'opB':
+                    ins.opB_new = instructions[id].dst_new
+                if opname == 'src':
+                    ins.src_new = instructions[id].dst_new
+                if opname == 'addr':
+                    ins.addr_new = instructions[id].dst_new
+            #     if getattr(ins, opname + "_new") is None:
+            #         setattr(ins, opname + "_new", instructions[id].dst_new)
 
-    def allocate_registers(self, instructions, scheduler, BB0, BB1, BB2):
+    def allocate_registers(self, instructions, scheduler: Scheduler, BB0, BB1, BB2):
         self.ins_stage = [None for i in range(len(instructions) + 1)]
 
         # phase1
@@ -59,11 +67,12 @@ class RegisterAllocator_pip:
                 self.nonvar_ins.add(id)
                 
         # print(self.nonvar_ins)
-        for nonvar_id in self.nonvar_ins:
-            self.cnt_reg_nonrot += 1
-            # import ipdb; ipdb.set_trace()
-            instructions[nonvar_id].dst_new = "x" + str(self.cnt_reg_nonrot)
-
+        for bundle in scheduler.bundles:
+            for ins in bundle:
+                if ins is not None and ins != "--":
+                    if ins.id in self.nonvar_ins:
+                        self.cnt_reg_nonrot += 1
+                        instructions[ins.id].dst_new = "x" + str(self.cnt_reg_nonrot)
 
         # phase3
         # link all dependencies in BB1
@@ -137,18 +146,19 @@ class RegisterAllocator_pip:
         for bundle in scheduler.bundles:
             for ins in bundle:
                 if ins is not None and ins != '--':
-                    for opname in {"opA", "opB", "src", "addr"}:
+                    for opname in ["opA", "opB", "src", "addr"]:
                         if getattr(ins, opname) is not None and getattr(ins, opname + "_new") is None:
                             self.cnt_reg_nonrot += 1
                             setattr(ins, opname + "_new", "x" + str(self.cnt_reg_nonrot))
                 
 
-        scheduler.print()
+        # scheduler.print()
+
         # print(scheduler.bundles[1][1])
         # print(scheduler.bundles[1][1].dst_new)
         # print(instructions[3])
         # print(instructions[3].dst_new)
-        pass
+        # pass
 
 class RegisterAllocator_simp:
     reg_dict = {}
@@ -271,4 +281,4 @@ class RegisterAllocator_simp:
                         self.cnt += 1
                         ins.addr_new = "x" + str(self.cnt)
         
-        pass
+        # pass

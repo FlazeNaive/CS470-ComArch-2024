@@ -1,16 +1,16 @@
 [
   [
-    "add None, None, None",
-    "addi None, None, 6",
-    "mulu None, None, None",
-    "ld None, 0(None)",
+    "add x1, x7, x8",
+    "addi x2, x9, 6",
+    "mulu x3, x10, x11",
+    "ld x4, 0(x12)",
     "nop"
   ],
   [
-    "sub None, None, None",
-    "mov None, 18",
+    "sub x5, x13, x14",
+    "mov x6, 18",
     "nop",
-    "st None, 0(None)",
+    "st x15, 0(x16)",
     "nop"
   ]
 ]

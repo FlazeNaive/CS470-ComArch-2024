@@ -1,7 +1,7 @@
 [
   [
-    "mov None, 100",
-    "mov None, 5",
+    "mov LC, 100",
+    "mov x1, 5",
     "nop",
     "nop",
     "nop"
@@ -9,14 +9,7 @@
   [
     "nop",
     "nop",
-    "mulu None, None, None",
-    "nop",
-    "nop"
-  ],
-  [
-    "nop",
-    "nop",
-    "nop",
+    "mulu x33, x1, x1",
     "nop",
     "nop"
   ],
@@ -28,7 +21,14 @@
     "nop"
   ],
   [
-    "add None, None, None",
+    "mov EC, 0",
+    "mov p32, true",
+    "nop",
+    "nop",
+    "nop"
+  ],
+  [
+    "(p32) add x32, x33, x33",
     "nop",
     "nop",
     "nop",
