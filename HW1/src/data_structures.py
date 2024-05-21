@@ -2,6 +2,7 @@ class ALUEntry:
     def __init__(self, PhyAddr, Value):
         self.PhyAddr = PhyAddr
         self.Value = Value
+
 class ActiveListEntry:
     def __init__(self, LogicalDestination=0, OldDestination=0, PC=0):
         self.Done = False

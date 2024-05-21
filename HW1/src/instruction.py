@@ -1,5 +1,4 @@
 # instruction.py
-import re
 
 def decode_instruction(instruction):
     parts = instruction.split()
