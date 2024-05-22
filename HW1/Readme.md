@@ -16,6 +16,10 @@ Assuming you already have a valid build.sh and run.sh script, you can run genera
 test cases using.
 
 ```
+./run.sh given_tests/01/input.json given_tests/01/myoutput.json
+```
+
+```
 ./runall.sh
 ```
 
