@@ -1,6 +1,6 @@
 # simulator.py
 from data_structures import ActiveListEntry, IntegerQueueEntry, ALUEntry, compare_json
-from instruction import decode_instruction
+from instruction import Instruction
 
 import json
 
@@ -18,6 +18,8 @@ class Simulator:
         self.ALU0 = []
         self.ALU1 = []
         self.ALU2 = []  
+        self.forwarding = []  # element: (physical register, value)
+
         self.processor_state = {
             "PC": 0,
             "PhysicalRegisterFile": [0] * 64,
@@ -37,8 +39,8 @@ class Simulator:
         # load instructions from json file
         self.instructions = json.load(open(input_file_path))
         for ins in self.instructions:
-            opcode, operands = decode_instruction(ins)
-            self.parsedInstructions.append((opcode, operands)) # where operans = [Dest, op1, op2]
+            new_instruction = Instruction(ins)
+            self.parsedInstructions.append(new_instruction)
 
         # Only for test
         print("[INFO] Instructions loaded")
@@ -56,6 +58,7 @@ class Simulator:
         if flag_backpressure:
             to_fetch = 0
         if flag_exception:
+            # handle exception
             self.processor_state['PC'] = '0x10000'
             return
         for _ in range(to_fetch):
@@ -64,7 +67,7 @@ class Simulator:
             self.processor_state['DecodedPCs'].append(self.processor_state['PC'])
             self.processor_state['PC'] += 1
 
-    def Rename_and_Dispatch(self):
+    def Rename_and_Dispatch(self, flag_backpressure):
         # check if enough entries in 
         ## "Active List", 
         need_to_dispatch = min(4, len(self.processor_state['DecodedPCs']))
@@ -83,22 +86,21 @@ class Simulator:
             flag_backpressure = True
 
         if not flag_backpressure:
-            for ins in self.processor_state['DecodedPCs']:
+            for ins_id in self.processor_state['DecodedPCs']:
                 # rename the instruction
-                (opr, operands) = self.parsedInstructions[ins]
-                logical_dest = int(operands[0][1:])
+                cur_ins: Instruction = self.parsedInstructions[ins_id]
+                logical_dest = cur_ins.dest
 
                 # update RegMapTable, and Free List
                 old_physical_dest = self.processor_state['RegisterMapTable'][logical_dest]
                 new_physical_dest = self.processor_state['FreeList'].pop(0)
                 self.processor_state['RegisterMapTable'][logical_dest] = new_physical_dest
-                # import ipdb; ipdb.set_trace()
 
                 # update ActiveList
                 cur_actlist = ActiveListEntry(
                         LogicalDestination=logical_dest, 
                         OldDestination=old_physical_dest, 
-                        PC=ins)
+                        PC=ins_id)
                 self.actlist.append(cur_actlist)
                 # self.processor_state['ActiveList'].append(
                 #     json.loads(
@@ -113,25 +115,42 @@ class Simulator:
                 OpBValue = 0
 
                 ## TODO: If OpA/OpB is calculated this cycle, make them ready
+                # it should be done in the execute stage, by modifiying the OpXIsReady
                 
-                logical_opA = int(operands[1][1:])
-                OpAIsReady = not self.processor_state['BusyBitTable'][logical_opA]
+                # TODO: not sure if the logic is correct but looks more likely than before
+                logical_opA = cur_ins.opA_ori
+                logical_opB = cur_ins.opB_ori
+                physical_opA = self.processor_state["RegisterMapTable"][logical_opA]
+                if cur_ins.opcode != 'addi':
+                    physical_opB = self.processor_state["RegisterMapTable"][logical_opB]
+                
+                OpAIsReady = not self.processor_state['BusyBitTable'][physical_opA]
                 if OpAIsReady:
-                    OpAValue = self.processor_state['PhysicalRegisterFile'][logical_opA]
+                    OpAValue = self.processor_state['PhysicalRegisterFile'][physical_opA]
                 else:
-                    OpARegTag = self.processor_state['RegisterMapTable'][logical_opA]
+                    OpARegTag = physical_opA
+                    for forward in self.forwarding:
+                        if forward[0] == physical_opA:
+                            OpAIsReady = True
+                            OpAValue = forward[1]
+                            break
 
+                opr = cur_ins.opcode
                 if opr == 'addi':
                     opr = 'add'
                     OpBIsReady = True
-                    OpBValue = int(operands[2])
+                    OpBValue = cur_ins.imm
                 else:
-                    logical_opB = int(operands[2][1:])
-                    OpBIsReady = not self.processor_state['BusyBitTable'][logical_opB]
+                    OpBIsReady = not self.processor_state['BusyBitTable'][physical_opB]
                     if OpBIsReady:
-                        OpBValue = self.processor_state['PhysicalRegisterFile'][logical_opB]
+                        OpBValue = self.processor_state['PhysicalRegisterFile'][physical_opB]
                     else:
-                        OpBRegTag = self.processor_state['RegisterMapTable'][logical_opB]
+                        OpBRegTag = physical_opB
+                        for forward in self.forwarding:
+                            if forward[0] == physical_opB:
+                                OpBIsReady = True
+                                OpBValue = forward[1]
+                                break
                     
                 cur_intque = IntegerQueueEntry(DestRegister=new_physical_dest,
                                       OpAIsReady=OpAIsReady,
@@ -141,7 +160,7 @@ class Simulator:
                                       OpBRegTag=OpBRegTag,
                                       OpBValue=OpBValue,
                                       OpCode=opr,
-                                      PC=ins)
+                                      PC=ins_id)
                 self.intqueue.append(cur_intque)
                 # self.processor_state['IntegerQueue'].append(
                 #     json.loads(
@@ -171,6 +190,7 @@ class Simulator:
             self.handle_backpressure()
     
     def Issue_Stage(self):
+        # ready_int: 在intqueue里找四个最老的ready的int
         ready_int = []
         for intentry in self.intqueue:
             if intentry.OpAIsReady and intentry.OpBIsReady:
@@ -183,11 +203,13 @@ class Simulator:
         
         return ready_int
     
-    def Execute_Stage(self, ready_int):
+    def Execute_Stage(self, ready_int, flag_exception):
         self.ALU2 = self.ALU1
         self.ALU1 = self.ALU0
-        self.ALU0 = []
-        for intentry in ready_int:
+        self.ALU0 = ready_int
+        for intentry in self.ALU2:
+            # import ipdb; ipdb.set_trace()
+            # self.processor_state["PhysicalRegisterFile"][intentry.DestRegister]
             result = 0
             match intentry.OpCode:
                 case 'add': 
@@ -230,7 +252,7 @@ class Simulator:
             ready_int = self.Issue_Stage()
 
             # calculate the result
-            self.Execute_Stage(ready_int)
+            self.Execute_Stage(ready_int, flag_exception)
             
             # TODO: update IntegerQueue
 
@@ -238,7 +260,7 @@ class Simulator:
 
             # ==================== stage 2 ====================
             # rename and dispatch
-            self.Rename_and_Dispatch()
+            self.Rename_and_Dispatch(flag_backpressure)
 
             # ==================== stage 1 ====================
             # 每个cycle fetch 4 instructions
@@ -253,9 +275,15 @@ class Simulator:
             # # print(debug_std_out['IntegerQueue'])
             # print("[INFO] Debugging: cycle = ", count_cycle)
             # self.debug_check_same(debug_std_out)
-            # count_cycle += 1
 
-            # import ipdb; ipdb.set_trace()
+
+
+            # ==========
+            # # logging 
+            # ==========
+            
+            self.forwarding = []
+            count_cycle += 1
             self.append_logs()
             # cycle 0, 1是对的
             
