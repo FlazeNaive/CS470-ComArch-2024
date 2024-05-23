@@ -9,9 +9,12 @@ def main(input_file, output_file):
     simulator = Simulator()
     simulator.load_instructions(input_file)
     simulator.run()
-    simulator.print_state()
+    
+    # simulator.print_state()
+    print(len(simulator.logs))
+    simulator.dump_logs(output_file)
 
-    simulator.dump_state(output_file)
+    # simulator.dump_state(output_file)
 
     # std_out_json = json.loads(open(std_out).read())
 

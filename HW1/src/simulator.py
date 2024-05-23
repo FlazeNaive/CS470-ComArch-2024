@@ -1,23 +1,24 @@
 # simulator.py
 from data_structures import ActiveListEntry, IntegerQueueEntry, ALUEntry, compare_json
 from instruction import Instruction
+from typing import List
 
 import json
 
 class Simulator:
     def __init__(self):
         self.instructions = []
-        self.parsedInstructions = []
+        self.parsedInstructions: List[Instruction] = []
         self.logs = []
-        self.actlist = []
-        self.intqueue = []
+        self.actlist: List[ActiveListEntry] = []
+        self.intqueue: List[IntegerQueueEntry] = []
         
         # ALU_N的意思是是在ALU里呆了N个cycle
         # ALU 有2个cycle的延迟
         # 有4个ALU
-        self.ALU0 = []
-        self.ALU1 = []
-        self.ALU2 = []  
+        self.ALU0: List[IntegerQueueEntry] = []
+        self.ALU1: List[IntegerQueueEntry] = []
+        self.ALU2: List[IntegerQueueEntry] = []  
         self.forwarding = []  # element: (physical register, value)
 
         self.processor_state = {
@@ -47,7 +48,7 @@ class Simulator:
 
     def append_logs(self):
         # import ipdb; ipdb.set_trace()
-        self.logs.append(json.loads(json.dumps(self.processor_state)))
+        self.logs.append(json.loads(json.dumps(self.processor_state, indent=4)))
     
     def handle_backpressure(self):
         pass
@@ -102,6 +103,7 @@ class Simulator:
                         OldDestination=old_physical_dest, 
                         PC=ins_id)
                 self.actlist.append(cur_actlist)
+
                 # self.processor_state['ActiveList'].append(
                 #     json.loads(
                 #         json.dumps(cur_actlist.__dict__)))
@@ -114,8 +116,6 @@ class Simulator:
                 OpAValue = 0
                 OpBValue = 0
 
-                ## TODO: If OpA/OpB is calculated this cycle, make them ready
-                # it should be done in the execute stage, by modifiying the OpXIsReady
                 
                 # TODO: not sure if the logic is correct but looks more likely than before
                 logical_opA = cur_ins.opA_ori
@@ -201,12 +201,20 @@ class Simulator:
         if len(ready_int) > 4:
             ready_int = ready_int[:4]
         
+        for intentry in reversed(self.intqueue):
+            # reverse to avoid index error
+            if intentry in ready_int:
+                self.intqueue.remove(intentry)
+        
         return ready_int
     
     def Execute_Stage(self, ready_int, flag_exception):
+        self.forwarding = []
+        # TODO: 不确定要不要ALU2, 好像第二个cycle已经有结果了
         self.ALU2 = self.ALU1
         self.ALU1 = self.ALU0
         self.ALU0 = ready_int
+
         for intentry in self.ALU2:
             # import ipdb; ipdb.set_trace()
             # self.processor_state["PhysicalRegisterFile"][intentry.DestRegister]
@@ -230,13 +238,28 @@ class Simulator:
                         result = intentry.OpAValue % intentry.OpBValue
             
             if not flag_exception:
-                # TODO: No DestiationRegister here
-                pass
-                # self.ALU0.append(ALUEntry(intentry.DestinationRegister, result))
+                # update forwarding
+                self.forwarding.append((intentry.DestRegister, result))
+
+                # update activelist
+                for id, _ in enumerate(self.actlist):
+                    if self.actlist[id].PC == intentry.PC:
+                        self.actlist[id].Done = True
+
+                # update physical register file
+                phy_des = intentry.DestRegister
+                self.processor_state['PhysicalRegisterFile'][phy_des] = result
+                self.processor_state['BusyBitTable'][phy_des] = False
             else:
-                # TODO: exception
+                for id, _ in enumerate(self.actlist):
+                    if self.actlist[id].PC == intentry.PC:
+                        self.actlist[id].Done = True
+                        self.actlist[id].Exception = True
+
                 pass
-    
+
+            
+
 
     def run(self):
         self.append_logs()
@@ -282,11 +305,12 @@ class Simulator:
             # # logging 
             # ==========
             
-            self.forwarding = []
             count_cycle += 1
             self.append_logs()
             # cycle 0, 1是对的
             
+    def dump_logs(self, output_file):
+        json.dump(self.logs, open(output_file, "w"))
 
     def dump_state(self, output_file):
         json.dump(self.processor_state, open(output_file, "w"))
