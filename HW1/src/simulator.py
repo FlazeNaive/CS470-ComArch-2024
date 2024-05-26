@@ -90,23 +90,6 @@ class Simulator:
             for ins_id in self.processor_state['DecodedPCs']:
                 # rename the instruction
                 cur_ins: Instruction = self.parsedInstructions[ins_id]
-                logical_dest = cur_ins.dest
-
-                # update RegMapTable, and Free List
-                old_physical_dest = self.processor_state['RegisterMapTable'][logical_dest]
-                new_physical_dest = self.processor_state['FreeList'].pop(0)
-                self.processor_state['RegisterMapTable'][logical_dest] = new_physical_dest
-
-                # update ActiveList
-                cur_actlist = ActiveListEntry(
-                        LogicalDestination=logical_dest, 
-                        OldDestination=old_physical_dest, 
-                        PC=ins_id)
-                self.actlist.append(cur_actlist)
-
-                # self.processor_state['ActiveList'].append(
-                #     json.loads(
-                #         json.dumps(cur_actlist.__dict__)))
 
                 # update IntegerQueue
                 OpAIsReady = False
@@ -116,8 +99,11 @@ class Simulator:
                 OpAValue = 0
                 OpBValue = 0
 
+                # firstly deal with the operands, then the destination
                 
                 # TODO: not sure if the logic is correct but looks more likely than before
+                # print("[INFO] cycle: ", self.count_cycle)
+                # import ipdb; ipdb.set_trace()
                 logical_opA = cur_ins.opA_ori
                 logical_opB = cur_ins.opB_ori
                 physical_opA = self.processor_state["RegisterMapTable"][logical_opA]
@@ -146,11 +132,29 @@ class Simulator:
                         OpBValue = self.processor_state['PhysicalRegisterFile'][physical_opB]
                     else:
                         OpBRegTag = physical_opB
+                        # print("[INFO] Cycle: ", self.count_cycle)
+                        # print("[INFO] OpBRegTag: ", OpBRegTag)
+                        # import ipdb; ipdb.set_trace()
                         for forward in self.forwarding:
                             if forward[0] == physical_opB:
                                 OpBIsReady = True
                                 OpBValue = forward[1]
                                 break
+
+                # ====================
+                # process the destination
+                logical_dest = cur_ins.dest
+                # update RegMapTable, and Free List
+                old_physical_dest = self.processor_state['RegisterMapTable'][logical_dest]
+                new_physical_dest = self.processor_state['FreeList'].pop(0)
+                self.processor_state['RegisterMapTable'][logical_dest] = new_physical_dest
+
+                # update ActiveList
+                cur_actlist = ActiveListEntry(
+                        LogicalDestination=logical_dest, 
+                        OldDestination=old_physical_dest, 
+                        PC=ins_id)
+                self.actlist.append(cur_actlist)
                     
                 cur_intque = IntegerQueueEntry(DestRegister=new_physical_dest,
                                       OpAIsReady=OpAIsReady,
@@ -193,6 +197,26 @@ class Simulator:
         # ready_int: 在intqueue里找四个最老的ready的int
         ready_int = []
         for intentry in self.intqueue:
+            if not intentry.OpAIsReady:
+                physical_opA = intentry.OpARegTag
+                for forward in self.forwarding:
+                    if forward[0] == physical_opA:
+                        intentry.OpAIsReady = True
+                        intentry.OpAValue = forward[1]
+                        break
+
+            if not intentry.OpBIsReady:
+                OpBRegTag = intentry.OpBRegTag
+                # print("[INFO] Cycle: ", self.count_cycle)
+                # print("[INFO] OpBRegTag: ", OpBRegTag)
+                # import ipdb; ipdb.set_trace()
+                physical_opB = intentry.OpBRegTag
+                for forward in self.forwarding:
+                    if forward[0] == physical_opB:
+                        intentry.OpBIsReady = True
+                        intentry.OpBValue = forward[1]
+                        break
+                
             if intentry.OpAIsReady and intentry.OpBIsReady:
                 ready_int.append(intentry)
             
@@ -215,7 +239,10 @@ class Simulator:
         self.ALU1 = self.ALU0
         self.ALU0 = ready_int
 
+        # print("[INFO] ExE Stage Cycle: ", self.count_cycle)
         for intentry in self.ALU2:
+        # for intentry in self.ALU1:
+            # print("[INFO] intentry: ", intentry.__dict__)
             # import ipdb; ipdb.set_trace()
             # self.processor_state["PhysicalRegisterFile"][intentry.DestRegister]
             result = 0
@@ -237,11 +264,15 @@ class Simulator:
                     else:
                         result = intentry.OpAValue % intentry.OpBValue
             
+            # import ipdb; ipdb.set_trace()
             if not flag_exception:
                 # update forwarding
                 self.forwarding.append((intentry.DestRegister, result))
 
                 # update activelist
+                # print("[INFO] cycle: ", self.count_cycle)
+                # print("[INFO] intentry.PC: ", intentry.PC)
+                # import ipdb; ipdb.set_trace()
                 for id, _ in enumerate(self.actlist):
                     if self.actlist[id].PC == intentry.PC:
                         self.actlist[id].Done = True
@@ -255,15 +286,32 @@ class Simulator:
                     if self.actlist[id].PC == intentry.PC:
                         self.actlist[id].Done = True
                         self.actlist[id].Exception = True
-
                 pass
 
-            
+    def Forwarding_Stage(self):        
+        for intentry in self.intqueue:
+            if not intentry.OpAIsReady:
+                physical_opA = intentry.OpARegTag
+                for forward in self.forwarding:
+                    if forward[0] == physical_opA:
+                        intentry.OpAIsReady = True
+                        intentry.OpAValue = forward[1]
+                        intentry.OpARegTag = 0
+                        break
+
+            if not intentry.OpBIsReady:
+                physical_opB = intentry.OpBRegTag
+                for forward in self.forwarding:
+                    if forward[0] == physical_opB:
+                        intentry.OpBIsReady = True
+                        intentry.OpBValue = forward[1]
+                        intentry.OpBRegTag = 0
+                        break
 
 
     def run(self):
         self.append_logs()
-        count_cycle = 1
+        self.count_cycle = 1
         while self.processor_state['PC'] < len(self.instructions):
             flag_backpressure = False
             flag_exception = False
@@ -278,6 +326,7 @@ class Simulator:
             self.Execute_Stage(ready_int, flag_exception)
             
             # TODO: update IntegerQueue
+            self.Forwarding_Stage()
 
                         
 
@@ -305,7 +354,7 @@ class Simulator:
             # # logging 
             # ==========
             
-            count_cycle += 1
+            self.count_cycle += 1
             self.append_logs()
             # cycle 0, 1是对的
             
