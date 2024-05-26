@@ -308,6 +308,8 @@ class Simulator:
                         intentry.OpBRegTag = 0
                         break
 
+    def Commit_Stage(self):
+        pass
 
     def run(self):
         self.append_logs()
@@ -315,6 +317,10 @@ class Simulator:
         while self.processor_state['PC'] < len(self.instructions):
             flag_backpressure = False
             flag_exception = False
+
+            # ==================== stage 4 ====================
+            # commit and deal with exception
+            self.Commit_Stage()
 
             # ==================== stage 3 ====================
             # issue, execution, forwarding pipeline
@@ -327,8 +333,6 @@ class Simulator:
             
             # TODO: update IntegerQueue
             self.Forwarding_Stage()
-
-                        
 
             # ==================== stage 2 ====================
             # rename and dispatch
