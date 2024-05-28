@@ -58,10 +58,10 @@ class Simulator:
         to_fetch = min(4, len(self.instructions) - self.processor_state['PC'])
         if flag_backpressure:
             to_fetch = 0
-        if flag_exception:
-            # handle exception
-            self.processor_state['PC'] = '0x10000'
-            return
+        # if flag_exception:
+        #     # handle exception
+        #     self.processor_state['PC'] = '0x10000'
+        #     return
         for _ in range(to_fetch):
             # ========== debug output ==========
             print("[INFO] fetching: ", self.processor_state['PC'])
@@ -115,6 +115,9 @@ class Simulator:
                     OpAValue = self.processor_state['PhysicalRegisterFile'][physical_opA]
                 else:
                     OpARegTag = physical_opA
+                    # print("[INFO] Cycle: ", self.count_cycle)
+                    # print("[INFO] OpARegTag: ", OpARegTag)
+                    # import ipdb; ipdb.set_trace()
                     for forward in self.forwarding:
                         if forward[0] == physical_opA:
                             OpAIsReady = True
@@ -196,12 +199,16 @@ class Simulator:
     def Issue_Stage(self):
         # ready_int: 在intqueue里找四个最老的ready的int
         ready_int = []
+        # print("[INFO] Cycle: ", self.count_cycle)
+        # print("[INFO] ISSUE STAGE")
+        # import ipdb; ipdb.set_trace()
         for intentry in self.intqueue:
             if not intentry.OpAIsReady:
                 physical_opA = intentry.OpARegTag
                 for forward in self.forwarding:
                     if forward[0] == physical_opA:
                         intentry.OpAIsReady = True
+                        intentry.OpARegTag = 0
                         intentry.OpAValue = forward[1]
                         break
 
@@ -214,6 +221,7 @@ class Simulator:
                 for forward in self.forwarding:
                     if forward[0] == physical_opB:
                         intentry.OpBIsReady = True
+                        intentry.OpBRegTag = 0
                         intentry.OpBValue = forward[1]
                         break
                 
@@ -230,14 +238,14 @@ class Simulator:
             if intentry in ready_int:
                 self.intqueue.remove(intentry)
         
-        return ready_int
+        # return ready_int
+        self.ALU0 = ready_int
     
-    def Execute_Stage(self, ready_int, flag_exception):
+    def Execute_Stage(self, flag_exception):
         self.forwarding = []
         # TODO: 不确定要不要ALU2, 好像第二个cycle已经有结果了
         self.ALU2 = self.ALU1
         self.ALU1 = self.ALU0
-        self.ALU0 = ready_int
 
         # print("[INFO] ExE Stage Cycle: ", self.count_cycle)
         for intentry in self.ALU2:
@@ -264,6 +272,11 @@ class Simulator:
                     else:
                         result = intentry.OpAValue % intentry.OpBValue
             
+            # print("[INFO] cycle: ", self.count_cycle)
+            # print("[INFO] intentry.PC: ", intentry.PC)
+            # print("[INFO] DEST: ", intentry.DestRegister)
+            # print("[INFO] EXECUTE")
+            # print("[INFO] result: ", result)
             # import ipdb; ipdb.set_trace()
             if not flag_exception:
                 # update forwarding
@@ -309,8 +322,29 @@ class Simulator:
                         break
 
     def Commit_Stage(self):
-        pass
+        # scans activelist
+        picked = []
+        for cur_act in self.actlist:
+            if cur_act.Done:
+                if cur_act.Exception:
+                    self.processor_state['Exception'] = True
+                    self.processor_state['ExceptionPC'] = cur_act.PC
 
+                picked.append(cur_act)
+            else:
+                break
+            if len(picked) == 4:
+                break
+        
+        # update activelist
+        # && recycle physical register & push back to free list
+        for cur_act in picked:
+            self.actlist.remove(cur_act)
+            self.processor_state['FreeList'].append(cur_act.OldDestination)
+    
+    def dealException(self):
+        pass
+        
     def run(self):
         self.append_logs()
         self.count_cycle = 1
@@ -318,20 +352,26 @@ class Simulator:
             flag_backpressure = False
             flag_exception = False
 
+            # ==================== stage 5 ====================
+            # deal with exception
+            if flag_exception:
+                self.dealException()
+
             # ==================== stage 4 ====================
-            # commit and deal with exception
+            # commit 
             self.Commit_Stage()
 
             # ==================== stage 3 ====================
             # issue, execution, forwarding pipeline
 
-            # find 4 oldest ready ins in integerqueue
-            ready_int = self.Issue_Stage()
-
             # calculate the result
-            self.Execute_Stage(ready_int, flag_exception)
+            self.Execute_Stage(flag_exception)
+
+            # update the ALU0
+            # find 4 oldest ready ins in integerqueue
+            self.Issue_Stage()
             
-            # TODO: update IntegerQueue
+            # update IntegerQueue
             self.Forwarding_Stage()
 
             # ==================== stage 2 ====================
