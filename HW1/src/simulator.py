@@ -21,6 +21,9 @@ class Simulator:
         self.ALU2: List[IntegerQueueEntry] = []  
         self.forwarding = []  # element: (physical register, value)
 
+        self.flag_exception = False
+        self.exceptionPC = 0
+
         self.processor_state = {
             "PC": 0,
             "PhysicalRegisterFile": [0] * 64,
@@ -54,7 +57,7 @@ class Simulator:
         pass
 
 
-    def Fetch_and_Decode(self, flag_backpressure, flag_exception):
+    def Fetch_and_Decode(self, flag_backpressure):
         to_fetch = min(4, len(self.instructions) - self.processor_state['PC'])
         if flag_backpressure:
             to_fetch = 0
@@ -184,8 +187,8 @@ class Simulator:
                 self.processor_state['IntegerQueue'].append(
                     json.loads(
                         json.dumps(intque.__dict__)))
-            self.processor_state['ActiveList'] = []
 
+            self.processor_state['ActiveList'] = []
             for actentry in self.actlist:
                 self.processor_state['ActiveList'].append(
                         json.loads(
@@ -241,7 +244,9 @@ class Simulator:
         # return ready_int
         self.ALU0 = ready_int
     
-    def Execute_Stage(self, flag_exception):
+    def Execute_Stage(self):
+        # if self.count_cycle == 22:
+        #     import ipdb; ipdb.set_trace()
         self.forwarding = []
         # TODO: 不确定要不要ALU2, 好像第二个cycle已经有结果了
         self.ALU2 = self.ALU1
@@ -249,6 +254,7 @@ class Simulator:
 
         # print("[INFO] ExE Stage Cycle: ", self.count_cycle)
         for intentry in self.ALU2:
+            cur_exception = False
         # for intentry in self.ALU1:
             # print("[INFO] intentry: ", intentry.__dict__)
             # import ipdb; ipdb.set_trace()
@@ -263,12 +269,16 @@ class Simulator:
                     result = intentry.OpAValue * intentry.OpBValue
                 case 'divu':
                     if intentry.OpBValue == 0:
-                        flag_exception = True
+                        cur_exception = True
+                        self.flag_exception = True
+                        self.exceptionPC = intentry.PC
                     else:
                         result = intentry.OpAValue // intentry.OpBValue
                 case 'remu':
                     if intentry.OpBValue == 0:
-                        flag_exception = True
+                        cur_exception = True
+                        self.flag_exception = True
+                        self.exceptionPC = intentry.PC
                     else:
                         result = intentry.OpAValue % intentry.OpBValue
             
@@ -286,7 +296,7 @@ class Simulator:
             # print("[INFO] EXECUTE")
             # print("[INFO] result: ", result)
             # import ipdb; ipdb.set_trace()
-            if not flag_exception:
+            if not cur_exception:
                 # update forwarding
                 self.forwarding.append((intentry.DestRegister, result))
 
@@ -307,6 +317,8 @@ class Simulator:
                     if self.actlist[id].PC == intentry.PC:
                         self.actlist[id].Done = True
                         self.actlist[id].Exception = True
+                        # self.processor_state['Exception'] = True
+                        # self.processor_state['ExceptionPC'] = intentry.PC
                 pass
 
     def Forwarding_Stage(self):        
@@ -351,59 +363,108 @@ class Simulator:
             self.processor_state['FreeList'].append(cur_act.OldDestination)
     
     def dealException(self):
+        # import ipdb; ipdb.set_trace()
+
+        # do the recovery of ActiveList
+        to_remove = []
+        for cur_act in reversed(self.actlist):
+            to_remove.append(cur_act)
+            cur_log = cur_act.LogicalDestination
+            cur_phy = self.processor_state['RegisterMapTable'][cur_log]
+            old_phy = cur_act.OldDestination
+
+            self.processor_state['RegisterMapTable'][cur_log] = old_phy
+            self.processor_state['BusyBitTable'][cur_phy] = False
+            self.processor_state['FreeList'].append(cur_phy)
+
+            if len(to_remove) == 4:
+                break
+
+        # import ipdb; ipdb.set_trace()
+        for cur_act in to_remove:
+            self.actlist.remove(cur_act)
+
+        self.processor_state['ActiveList'] = []
+        for actentry in self.actlist:
+            self.processor_state['ActiveList'].append(
+                    json.loads(
+                        json.dumps(actentry.__dict__)))
+    
+    def enterException(self):
+        self.processor_state['Exception'] = True
+        self.processor_state['ExceptionPC'] = self.exceptionPC
+
         self.processor_state['PC'] = 0x10000
         self.processor_state['DecodedPCs'] = []
         self.processor_state['IntegerQueue'] = []
         self.ALU0 = []
         self.ALU1 = []
         self.ALU2 = []
-
-        # TODO: do the recovery
-        pass
         
     def run(self):
         self.append_logs()
         self.count_cycle = 1
+        self.flag_exception = False
         while self.processor_state['PC'] < len(self.instructions) or self.actlist or self.processor_state['DecodedPCs']:
 
-            # print("[INFO] Cycle: ", self.count_cycle)
-            # print("[INFO] PC: ", self.processor_state['PC'])
+            print("\n[INFO] Cycle: ", self.count_cycle)
+            print("[INFO] PC: ", self.processor_state['PC'])
+            print("[INFO] BEFORE EVERYTHING")
+            print("[INFO] Exception: ", self.processor_state['Exception'])
 
             # ==================== stage 5 ====================
             # deal with exception
-            if self.processor_state['Exception']:
+            if self.flag_exception and not self.processor_state['Exception']:
+                self.enterException()
+            elif self.processor_state['Exception']:
+                # import ipdb; ipdb.set_trace()
                 self.dealException()
-                if self.count_cycle > 30:
+                if not self.actlist:
+                    self.count_cycle += 1
+                    self.append_logs()
+                    self.processor_state['Exception'] = False
+                    self.count_cycle += 1
+                    self.append_logs()
                     break
+            else:
 
-            flag_backpressure = False
-            flag_exception = False
+                flag_backpressure = False
 
-            # ==================== stage 4 ====================
-            # commit 
-            self.Commit_Stage()
+                # ==================== stage 4 ====================
+                # commit 
+                self.Commit_Stage()
+                # print("[INFO] AFTER Commit")
+                # print("[info] exception: ", self.processor_state['Exception'])
 
-            # ==================== stage 3 ====================
-            # issue, execution, forwarding pipeline
+                # ==================== stage 3 ====================
+                # issue, execution, forwarding pipeline
 
-            # calculate the result
-            self.Execute_Stage(flag_exception)
+                # calculate the result
+                self.Execute_Stage()
+                print("[INFO] EXECUTE STAGE")
+                print("[INFO] Exception: ", self.processor_state['Exception'])
 
-            # update the ALU0
-            # find 4 oldest ready ins in integerqueue
-            self.Issue_Stage()
-            
-            # update IntegerQueue
-            self.Forwarding_Stage()
+                # update the ALU0
+                # find 4 oldest ready ins in integerqueue
+                self.Issue_Stage()
+                print("[INFO] ISSUE STAGE")
+                print("[INFO] Exception: ", self.processor_state['Exception'])
 
-            # ==================== stage 2 ====================
-            # rename and dispatch
-            self.Rename_and_Dispatch(flag_backpressure)
+                # update IntegerQueue
+                self.Forwarding_Stage()
 
-            # ==================== stage 1 ====================
-            # 每个cycle fetch 4 instructions
-            # fetch and decode
-            self.Fetch_and_Decode(flag_backpressure, flag_exception)
+                # ==================== stage 2 ====================
+                # rename and dispatch
+                self.Rename_and_Dispatch(flag_backpressure)
+                print("[INFO] RD STAGE")
+                print("[INFO] Exception: ", self.processor_state['Exception'])
+
+                # ==================== stage 1 ====================
+                # 每个cycle fetch 4 instructions
+                # fetch and decode
+                self.Fetch_and_Decode(flag_backpressure)
+                print("[INFO] FD STAGE")
+                print("[INFO] Exception: ", self.processor_state['Exception'])
             
             # ==========
             # # Only for debugging output

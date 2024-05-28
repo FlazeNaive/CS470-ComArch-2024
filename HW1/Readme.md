@@ -19,6 +19,7 @@ test cases using.
 ./run.sh given_tests/01/input.json given_tests/01/myoutput.json
 ./run.sh given_tests/02/input.json given_tests/02/myoutput.json
 ./run.sh given_tests/03/input.json given_tests/03/myoutput.json
+./run.sh given_tests/08/input.json given_tests/08/myoutput.json
 ```
 
 ```
