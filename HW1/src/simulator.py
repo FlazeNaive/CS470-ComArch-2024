@@ -351,24 +351,33 @@ class Simulator:
             self.processor_state['FreeList'].append(cur_act.OldDestination)
     
     def dealException(self):
+        self.processor_state['PC'] = 0x10000
+        self.processor_state['DecodedPCs'] = []
+        self.processor_state['IntegerQueue'] = []
+        self.ALU0 = []
+        self.ALU1 = []
+        self.ALU2 = []
+
+        # TODO: do the recovery
         pass
         
     def run(self):
         self.append_logs()
         self.count_cycle = 1
         while self.processor_state['PC'] < len(self.instructions) or self.actlist or self.processor_state['DecodedPCs']:
-            if self.processor_state['Exception']:
-                break
 
             # print("[INFO] Cycle: ", self.count_cycle)
             # print("[INFO] PC: ", self.processor_state['PC'])
-            flag_backpressure = False
-            flag_exception = False
 
             # ==================== stage 5 ====================
             # deal with exception
-            if flag_exception:
+            if self.processor_state['Exception']:
                 self.dealException()
+                if self.count_cycle > 30:
+                    break
+
+            flag_backpressure = False
+            flag_exception = False
 
             # ==================== stage 4 ====================
             # commit 
