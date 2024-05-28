@@ -349,6 +349,8 @@ class Simulator:
         self.append_logs()
         self.count_cycle = 1
         while self.processor_state['PC'] < len(self.instructions):
+            print("[INFO] Cycle: ", self.count_cycle)
+            print("[INFO] PC: ", self.processor_state['PC'])
             flag_backpressure = False
             flag_exception = False
 
@@ -392,8 +394,6 @@ class Simulator:
             # print("[INFO] Debugging: cycle = ", count_cycle)
             # self.debug_check_same(debug_std_out)
 
-
-
             # ==========
             # # logging 
             # ==========
@@ -401,6 +401,7 @@ class Simulator:
             self.count_cycle += 1
             self.append_logs()
             # cycle 0, 1是对的
+        
             
     def dump_logs(self, output_file):
         json.dump(self.logs, open(output_file, "w"))
