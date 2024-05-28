@@ -272,6 +272,14 @@ class Simulator:
                     else:
                         result = intentry.OpAValue % intentry.OpBValue
             
+            result %= 2**64
+            try:
+                result = int.from_bytes((result).to_bytes(9, 'little', signed=True), 'little', signed=False)
+            except OverflowError:
+                print("[INFO] result: ", result)
+                print("[INFO] OverflowError")
+                quit
+            
             # print("[INFO] cycle: ", self.count_cycle)
             # print("[INFO] intentry.PC: ", intentry.PC)
             # print("[INFO] DEST: ", intentry.DestRegister)
@@ -348,9 +356,12 @@ class Simulator:
     def run(self):
         self.append_logs()
         self.count_cycle = 1
-        while self.processor_state['PC'] < len(self.instructions):
-            print("[INFO] Cycle: ", self.count_cycle)
-            print("[INFO] PC: ", self.processor_state['PC'])
+        while self.processor_state['PC'] < len(self.instructions) or self.actlist or self.processor_state['DecodedPCs']:
+            if self.processor_state['Exception']:
+                break
+
+            # print("[INFO] Cycle: ", self.count_cycle)
+            # print("[INFO] PC: ", self.processor_state['PC'])
             flag_backpressure = False
             flag_exception = False
 
